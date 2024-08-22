@@ -17,13 +17,11 @@ func NewManualVolume() manualVolume {
 func (model *manualVolume) Calculate(forecastRule *rules.ForecastRule) []calculation.ForecastRecord {
 	trafficRecords := model.trafficProvider.GetLast(forecastRule, nil)
 
-	if model.shouldCalculateWithoutTraffic(trafficRecords) {
+	if model.shouldCalculateWithoutTraffic(trafficRecords) || forecastRule.LHM == nil {
 		return model.calculateWithoutTraffic(forecastRule)
 	}
 
 	// TODO:
-	//  1. Cover LHM case (calculation without LHM)
-	//  2. Cover with historical traffic case
 	//  3. Cover case when LHM is in forecasted period (recalculate forecasted volume + adjust forecasted period)
 
 	return model.calculateWithTraffic(forecastRule, trafficRecords)
