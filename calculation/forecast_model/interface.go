@@ -6,5 +6,5 @@ import (
 )
 
 type ForecastModel interface {
-	Calculate(forecastRule rules.ForecastRule) []calculation.ForecastRecord
+	Calculate(forecastRule *rules.ForecastRule) ([]calculation.ForecastRecord, error)
 }

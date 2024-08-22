@@ -37,3 +37,15 @@ func (p *Period) GetMonths() []carbon.Date {
 
 	return months
 }
+
+func (p *Period) Contains(month carbon.Date) bool {
+	months := make(map[string]string, p.GetTotalMonths())
+
+	for _, _month := range p.GetMonths() {
+		months[_month.ToDateString()] = _month.ToDateString()
+	}
+
+	_, exists := months[month.StartOfMonth().ToDateString()]
+
+	return exists
+}
