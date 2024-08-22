@@ -4,57 +4,35 @@ import (
 	"forecasting/calculation"
 	"forecasting/rules"
 	"forecasting/traffic"
-	"github.com/go-gota/gota/dataframe"
-	"github.com/golang-module/carbon/v2"
 )
 
 type manualVolume struct {
+	trafficProvider traffic.MonthlyAggregationProvider
 }
 
 func NewManualVolume() manualVolume {
-	return manualVolume{}
+	return manualVolume{trafficProvider: traffic.NewMonthlyAggregationProvider()}
 }
 
 func (model *manualVolume) Calculate(forecastRule *rules.ForecastRule) []calculation.ForecastRecord {
-	traffic := model.loadTraffic(forecastRule)
+	trafficRecords := model.trafficProvider.GetLast(forecastRule, nil)
 
-	df := dataframe.LoadStructs(traffic)
-
-	if model.shouldCalculateWithoutTraffic(df) {
+	if model.shouldCalculateWithoutTraffic(trafficRecords) {
 		return model.calculateWithoutTraffic(forecastRule)
 	}
 
-	return []calculation.ForecastRecord{
-		{VolumeActual: 50, Month: carbon.Parse("2024-10-01").ToDateStruct()},
-	}
+	// TODO:
+	//  1. Cover LHM case (calculation without LHM)
+	//  2. Cover with historical traffic case
+	//  3. Cover case when LHM is in forecasted period (recalculate forecasted volume + adjust forecasted period)
+
+	return model.calculateWithTraffic(forecastRule, trafficRecords)
 }
 
-func (model *manualVolume) loadTraffic(forecastRule *rules.ForecastRule) []traffic.MonthlyAggregationRecord {
-	return []traffic.MonthlyAggregationRecord{
-		{
-			VolumeActual: 0.0,
-			// Month:        time.Date(2023, 8, 1, 0, 0, 0, 0, tz),
-			Month: "2023-08-01",
-		},
-		{
-			VolumeActual: 0.0,
-			// Month:        time.Date(2023, 9, 1, 0, 0, 0, 0, tz),
-			Month: "2023-09-01",
-		},
-		{
-			VolumeActual: 0.0,
-			// Month:        time.Date(2023, 10, 1, 0, 0, 0, 0, tz),
-			Month: "2023-10-01",
-		},
-	}
-}
+func (model *manualVolume) shouldCalculateWithoutTraffic(trafficRecords []traffic.MonthlyAggregationRecord) bool {
+	trafficIsEmpty := len(trafficRecords) == 0
 
-func (model *manualVolume) shouldCalculateWithoutTraffic(df dataframe.DataFrame) bool {
-	rows, _ := df.Dims()
-
-	trafficIsEmpty := rows == 0
-
-	trafficIsZeroVolume := df.Col("VolumeActual").Sum() == 0
+	trafficIsZeroVolume := calculateTotalHistoricalVolume(trafficRecords) == 0
 
 	return trafficIsEmpty || trafficIsZeroVolume
 }
@@ -75,4 +53,49 @@ func (model *manualVolume) calculateWithoutTraffic(forecastRule *rules.ForecastR
 	}
 
 	return forecastRecords
+}
+
+func (model *manualVolume) calculateWithTraffic(
+	forecastRule *rules.ForecastRule,
+	trafficRecords []traffic.MonthlyAggregationRecord,
+) []calculation.ForecastRecord {
+
+	totalHistoricalVolume := calculateTotalHistoricalVolume(trafficRecords)
+
+	totalForecastedVolume := forecastRule.Volume
+
+	totalForecastedMonths := forecastRule.Period.GetTotalMonths()
+
+	historicalTrafficMonthMap := make(map[string]traffic.MonthlyAggregationRecord, totalForecastedMonths)
+
+	for _, record := range trafficRecords {
+		historicalTrafficMonthMap[record.Month.ToDateString()] = record
+	}
+
+	forecastedRecords := make([]calculation.ForecastRecord, totalForecastedMonths)
+
+	for idx, forecastedMonth := range forecastRule.Period.GetMonths() {
+		historicalRecord := historicalTrafficMonthMap[forecastedMonth.SubYear().ToDateString()]
+
+		forecastedVolumeActual := (historicalRecord.VolumeActual / totalHistoricalVolume) * totalForecastedVolume
+
+		forecastedRecord := calculation.ForecastRecord{
+			VolumeActual: forecastedVolumeActual,
+			Month:        forecastedMonth,
+		}
+
+		forecastedRecords[idx] = forecastedRecord
+	}
+
+	return forecastedRecords
+}
+
+func calculateTotalHistoricalVolume(trafficRecords []traffic.MonthlyAggregationRecord) float64 {
+	total := 0.0
+
+	for _, record := range trafficRecords {
+		total += record.VolumeActual
+	}
+
+	return total
 }
