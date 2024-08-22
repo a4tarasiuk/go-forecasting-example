@@ -3,6 +3,7 @@ package rules
 import (
 	"forecasting/core"
 	"forecasting/core/types"
+	"github.com/golang-module/carbon/v2"
 )
 
 type ForecastRule struct {
@@ -23,4 +24,6 @@ type ForecastRule struct {
 	Volume float64
 
 	DistributionModelMovingAverageMonths *int
+
+	LHM *carbon.Date
 }

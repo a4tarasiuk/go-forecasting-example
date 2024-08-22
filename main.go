@@ -14,6 +14,8 @@ func main() {
 	startDate := carbon.Parse("2024-08-05").ToDateStruct()
 	endDate := carbon.Parse("2024-10-11").ToDateStruct()
 
+	lhm := carbon.Parse("2024-07-01").ToDateStruct()
+
 	forecastRule := &rules.ForecastRule{
 		ID:                                   1,
 		HomeOperators:                        []int{1, 2, 3, 4, 5},
@@ -25,6 +27,7 @@ func main() {
 		DistributionModel:                    core.MovingAverageDistributionModel,
 		Volume:                               1200.0,
 		DistributionModelMovingAverageMonths: nil,
+		LHM:                                  &lhm,
 	}
 
 	manualVolumeModel := forecast_model.NewManualVolume()
