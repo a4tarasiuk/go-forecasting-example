@@ -11,14 +11,14 @@ import (
 )
 
 func main() {
-	startDate := carbon.Parse("2024-08-01").ToDateStruct()
-	endDate := carbon.Parse("2024-10-01").ToDateStruct()
+	startDate := carbon.Parse("2024-08-05").ToDateStruct()
+	endDate := carbon.Parse("2024-10-11").ToDateStruct()
 
 	forecastRule := &rules.ForecastRule{
 		ID:                                   1,
 		HomeOperators:                        []int{1, 2, 3, 4, 5},
 		PartnerOperators:                     []int{6, 7},
-		Period:                               types.Period{StartDate: startDate, EndDate: endDate},
+		Period:                               types.NewPeriod(startDate, endDate),
 		TrafficDirection:                     core.InboundTrafficDirection,
 		ServiceType:                          core.VoiceMO,
 		ForecastModel:                        core.ManualVolumeForecastModel,
