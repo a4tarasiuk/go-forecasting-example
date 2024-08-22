@@ -1,8 +1,9 @@
 package traffic
 
+import "github.com/golang-module/carbon/v2"
+
 type MonthlyAggregationRecord struct {
-	// Month time.Time
-	Month string
+	Month carbon.Date
 
 	VolumeActual float64
 }
