@@ -9,6 +9,13 @@ type Period struct {
 	EndDate   carbon.Date
 }
 
+func NewPeriod(StartDate carbon.Date, EndDate carbon.Date) Period {
+	return Period{
+		StartDate: StartDate.StartOfMonth().ToDateStruct(),
+		EndDate:   EndDate.EndOfMonth().ToDateStruct(),
+	}
+}
+
 func (p *Period) GetTotalMonths() int64 {
 	diffInMonths := p.StartDate.DiffInMonths(p.EndDate.Carbon)
 
