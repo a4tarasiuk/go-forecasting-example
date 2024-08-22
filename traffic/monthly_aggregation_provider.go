@@ -9,15 +9,23 @@ import (
 type monthlyAggregationProvider struct {
 }
 
-func NewMonthlyAggregationProvider() monthlyAggregationProvider {
-	return monthlyAggregationProvider{}
+func NewMonthlyAggregationProvider() *monthlyAggregationProvider {
+	return &monthlyAggregationProvider{}
 }
 
-func (p monthlyAggregationProvider) GetLast(
+func (p *monthlyAggregationProvider) GetLast(
 	forecastRule *rules.ForecastRule,
 	period *types.Period,
 ) []MonthlyAggregationRecord {
-	return _ZeroVolumeTrafficRecords
+
+	return _TrafficRecordsWithVolume
+}
+
+func (p *monthlyAggregationProvider) Get(
+	forecastRule *rules.ForecastRule,
+	period *types.Period,
+) []MonthlyAggregationRecord {
+	return _HistoricalRecordsInForecastedPeriod
 }
 
 var _TrafficRecordsWithVolume = []MonthlyAggregationRecord{
@@ -47,5 +55,12 @@ var _ZeroVolumeTrafficRecords = []MonthlyAggregationRecord{
 	{
 		VolumeActual: 0.0,
 		Month:        carbon.Parse("2023-10-01").ToDateStruct(),
+	},
+}
+
+var _HistoricalRecordsInForecastedPeriod = []MonthlyAggregationRecord{
+	{
+		VolumeActual: 500.0,
+		Month:        carbon.Parse("2024-08-01").ToDateStruct(),
 	},
 }

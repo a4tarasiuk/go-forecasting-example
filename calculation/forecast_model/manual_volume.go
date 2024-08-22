@@ -1,7 +1,10 @@
 package forecast_model
 
 import (
+	"errors"
+
 	"forecasting/calculation"
+	"forecasting/core/types"
 	"forecasting/rules"
 	"forecasting/traffic"
 )
@@ -14,17 +17,26 @@ func NewManualVolume() manualVolume {
 	return manualVolume{trafficProvider: traffic.NewMonthlyAggregationProvider()}
 }
 
-func (model *manualVolume) Calculate(forecastRule *rules.ForecastRule) []calculation.ForecastRecord {
+func (model *manualVolume) Calculate(forecastRule *rules.ForecastRule) ([]calculation.ForecastRecord, error) {
 	trafficRecords := model.trafficProvider.GetLast(forecastRule, nil)
 
 	if model.shouldCalculateWithoutTraffic(trafficRecords) || forecastRule.LHM == nil {
-		return model.calculateWithoutTraffic(forecastRule)
+		return model.calculateWithoutTraffic(forecastRule), nil
 	}
 
-	// TODO:
-	//  3. Cover case when LHM is in forecasted period (recalculate forecasted volume + adjust forecasted period)
+	if forecastRule.Period.Contains(*forecastRule.LHM) {
+		adjustedForecastedVolume, err := model.extractHistoricalVolumeFromForecasted(forecastRule)
 
-	return model.calculateWithTraffic(forecastRule, trafficRecords)
+		if err != nil {
+			return nil, err
+		}
+
+		forecastRule.Volume = adjustedForecastedVolume
+	}
+
+	forecastedRecords := model.calculateWithTraffic(forecastRule, trafficRecords)
+
+	return forecastedRecords, nil
 }
 
 func (model *manualVolume) shouldCalculateWithoutTraffic(trafficRecords []traffic.MonthlyAggregationRecord) bool {
@@ -51,6 +63,22 @@ func (model *manualVolume) calculateWithoutTraffic(forecastRule *rules.ForecastR
 	}
 
 	return forecastRecords
+}
+
+func (model *manualVolume) extractHistoricalVolumeFromForecasted(forecastRule *rules.ForecastRule) (float64, error) {
+	historicalPeriodInForecasted := types.NewPeriod(forecastRule.Period.StartDate, *forecastRule.LHM)
+
+	trafficRecords := model.trafficProvider.Get(forecastRule, &historicalPeriodInForecasted)
+
+	totalHistoricalVolume := calculateTotalHistoricalVolume(trafficRecords)
+
+	if totalHistoricalVolume > forecastRule.Volume {
+		return 0, errors.New("historical volume exceeds forecasted volume")
+	}
+
+	adjustedForecastedVolume := forecastRule.Volume - totalHistoricalVolume
+
+	return adjustedForecastedVolume, nil
 }
 
 func (model *manualVolume) calculateWithTraffic(

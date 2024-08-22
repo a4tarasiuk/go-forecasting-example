@@ -14,7 +14,7 @@ func main() {
 	startDate := carbon.Parse("2024-08-05").ToDateStruct()
 	endDate := carbon.Parse("2024-10-11").ToDateStruct()
 
-	lhm := carbon.Parse("2024-07-01").ToDateStruct()
+	lhm := carbon.Parse("2024-08-01").ToDateStruct()
 
 	forecastRule := &rules.ForecastRule{
 		ID:                                   1,
@@ -32,7 +32,9 @@ func main() {
 
 	manualVolumeModel := forecast_model.NewManualVolume()
 
-	trafficRecords := manualVolumeModel.Calculate(forecastRule)
+	trafficRecords, err := manualVolumeModel.Calculate(forecastRule)
+
+	fmt.Println(err)
 
 	for _, record := range trafficRecords {
 		fmt.Printf("%+v\n", record)
