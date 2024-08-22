@@ -1,4 +1,4 @@
-package forecast_model
+package forecast_models
 
 import (
 	"forecasting/calculation"
