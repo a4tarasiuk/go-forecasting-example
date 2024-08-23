@@ -8,27 +8,28 @@ import (
 	"forecasting/core"
 	"forecasting/core/types"
 	"forecasting/rules"
+	"forecasting/traffic"
 	"github.com/golang-module/carbon/v2"
 )
 
 func main() {
-	startDate := carbon.Parse("2024-08-05").ToDateStruct()
-	endDate := carbon.Parse("2024-09-11").ToDateStruct()
+	startDate := carbon.Parse("2023-01-01").ToDateStruct()
+	endDate := carbon.Parse("2023-01-01").ToDateStruct()
 
-	lhm := carbon.Parse("2024-08-01").ToDateStruct()
+	lhm := carbon.Parse("2022-12-01").ToDateStruct()
 
 	nMonths := 3
 
 	forecastRule := &rules.ForecastRule{
 		ID:                                   1,
-		HomeOperators:                        []int{1, 2},
-		PartnerOperators:                     []int{3, 4},
+		HomeOperators:                        []int{1},
+		PartnerOperators:                     []int{2, 3},
 		Period:                               types.NewPeriod(startDate, endDate),
 		TrafficDirection:                     core.InboundTrafficDirection,
 		ServiceType:                          core.VoiceMO,
 		ForecastModel:                        core.ManualVolumeForecastModel,
 		DistributionModel:                    core.MovingAverageDistributionModel,
-		Volume:                               1200.0,
+		Volume:                               2500.0,
 		DistributionModelMovingAverageMonths: &nMonths,
 		LHM:                                  &lhm,
 	}
@@ -41,13 +42,16 @@ func main() {
 	movingAverageDistributionModel := distribution_models.NewMovingAverage()
 
 	forecastRecords := []calculation.ForecastRecord{
-		{VolumeActual: 500.0, Month: carbon.Parse("2024-08-01").ToDateStruct()},
-		{VolumeActual: 100.0, Month: carbon.Parse("2024-09-01").ToDateStruct()},
+		{VolumeActual: forecastRule.Volume, Month: carbon.Parse("2023-01-01").ToDateStruct()},
 	}
 
 	trafficRecords, err := movingAverageDistributionModel.Apply(forecastRule, forecastRecords)
 
 	fmt.Println(err)
+
+	totalForecastVolumeAfterDistribution := traffic.CalculateTotalHistoricalVolume(trafficRecords)
+
+	fmt.Println("Total F volume", totalForecastVolumeAfterDistribution)
 
 	for _, record := range trafficRecords {
 		fmt.Printf("%+v\n", record)

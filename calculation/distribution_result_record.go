@@ -17,3 +17,7 @@ type DistributionRecord struct {
 
 	VolumeActual float64
 }
+
+func (r DistributionRecord) GetVolumeActual() float64 {
+	return r.VolumeActual
+}
