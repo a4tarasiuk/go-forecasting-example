@@ -1,7 +1,5 @@
 package traffic
 
-import "fmt"
-
 type budgetTrafficProvider struct {
 }
 
@@ -10,6 +8,5 @@ func NewBudgetTrafficProvider() *budgetTrafficProvider {
 }
 
 func (p *budgetTrafficProvider) Get(options BudgetTrafficOptions) []BudgetTrafficRecord {
-	fmt.Printf("%v\n", options)
 	return nil
 }

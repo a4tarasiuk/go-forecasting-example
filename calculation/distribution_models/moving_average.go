@@ -6,6 +6,8 @@ import (
 	"forecasting/core/types"
 	"forecasting/rules"
 	"forecasting/traffic"
+	"github.com/go-gota/gota/dataframe"
+	"github.com/go-gota/gota/series"
 )
 
 type movingAverage struct {
@@ -23,12 +25,9 @@ func (ma *movingAverage) Apply(
 	[]calculation.DistributionRecord,
 	error,
 ) {
-	// TODO:
-	//  3. Distribute forecast records based on historical traffic
-	//    3.1. Aggregate historical traffic records by key combination
-	//	  3.2. Calculate total volume actual (and for all other columns)
-	//	  3.3. Map every record with its forecast record (implementation detail from original solution)
-	//    3.4. Calculate shares within each month for every combination
+	if forecastRule.LHM == nil {
+		return ma.calculateWithoutTraffic(forecastRule, forecastRecords), nil
+	}
 
 	historicalTrafficRecords := ma.loadHistoricalTraffic(forecastRule)
 
@@ -36,7 +35,7 @@ func (ma *movingAverage) Apply(
 		return ma.calculateWithoutTraffic(forecastRule, forecastRecords), nil
 	}
 
-	return nil, nil
+	return ma.calculateWithTraffic(forecastRule, forecastRecords, historicalTrafficRecords), nil
 }
 
 func (ma *movingAverage) loadHistoricalTraffic(forecastRule *rules.ForecastRule) []traffic.BudgetTrafficRecord {
@@ -100,4 +99,126 @@ func (ma *movingAverage) calculateWithoutTraffic(
 	}
 
 	return distributionRecords
+}
+
+func (ma *movingAverage) calculateWithTraffic(
+	forecastRule *rules.ForecastRule,
+	forecastRecords []calculation.ForecastRecord,
+	historicalRecords []traffic.BudgetTrafficRecord,
+) []calculation.DistributionRecord {
+
+	rawHistoricalTrafficRecords := make([]map[string]interface{}, len(historicalRecords))
+
+	for idx, _historicalRecord := range historicalRecords {
+		rawHistoricalTrafficRecords[idx] = _historicalRecord.Serialize()
+	}
+
+	typesMap := map[string]series.Type{
+		"TrafficType":      series.Int,
+		"TrafficDirection": series.Int,
+		"ServiceType":      series.Int,
+		"CalledCountryID":  series.Int,
+	}
+
+	historicalTrafficDF := dataframe.LoadMaps(rawHistoricalTrafficRecords, dataframe.WithTypes(typesMap))
+
+	// Aggregation
+	historicalTrafficDF = historicalTrafficDF.GroupBy(
+		"HomeOperatorID",
+		"PartnerOperatorID",
+		"TrafficDirection",
+		"ServiceType",
+		"CallDestination",
+		"CalledCountryID",
+		"IsPremium",
+		"TrafficSegmentID",
+		"IMSICountType",
+	).Aggregation(
+		[]dataframe.AggregationType{dataframe.Aggregation_SUM}, []string{"VolumeActual"},
+	)
+
+	// Coefficient calculation
+	totalHistoricalVolume := traffic.CalculateTotalHistoricalVolume(historicalRecords)
+
+	divideOnTotal := func(el series.Element) series.Element {
+		el.Set(el.Val().(float64) / totalHistoricalVolume)
+		return el
+	}
+
+	historicalTrafficDF = historicalTrafficDF.Mutate(
+		series.New(
+			historicalTrafficDF.Col("VolumeActual_SUM").Map(divideOnTotal),
+			series.Float,
+			"ForecastCoefficient",
+		),
+	)
+
+	// Duplicate records for every forecasted month
+	forecastDfMap := make(map[calculation.ForecastRecord]dataframe.DataFrame)
+
+	for _, forecastRecord := range forecastRecords {
+		forecastDfMap[forecastRecord] = historicalTrafficDF.Copy()
+	}
+
+	totalResultRecords := int64(historicalTrafficDF.Nrow()) * forecastRule.Period.GetTotalMonths()
+
+	distributionRecords := make([]calculation.DistributionRecord, totalResultRecords)
+
+	idx := 0
+
+	for forecastRecord, df := range forecastDfMap {
+
+		for _, row := range df.Maps() {
+			forecastedVolumeActual := row["ForecastCoefficient"].(float64) * forecastRecord.VolumeActual
+
+			_distributionRecord := calculation.DistributionRecord{
+				HomeOperatorID:    row["HomeOperatorID"].(int),
+				PartnerOperatorID: row["PartnerOperatorID"].(int),
+				Month:             forecastRecord.Month,
+				CallDestination:   mapOptionalInt("CallDestination", row),
+				CalledCountryID:   mapOptionalInt("CalledCountryID", row),
+				IsPremium:         mapBool("IsPremium", row),
+				TrafficSegmentID:  mapOptionalInt("TrafficSegmentID", row),
+				IMSICountType:     mapOptionalInt("IMSICountType", row),
+				VolumeActual:      forecastedVolumeActual,
+			}
+
+			distributionRecords[idx] = _distributionRecord
+
+			idx++
+		}
+	}
+
+	return distributionRecords
+}
+
+func mapOptionalInt(colName string, row map[string]interface{}) *int {
+
+	var value *int
+
+	rawValue := row[colName].(int)
+
+	if rawValue == -1 {
+		value = nil
+	} else {
+		value = &rawValue
+	}
+
+	return value
+}
+
+func mapBool(colName string, row map[string]interface{}) *bool {
+	var value *bool
+
+	if row[colName].(int) == -1 {
+		value = nil
+	} else if row[colName].(int) == 0 {
+		f := false
+		value = &f
+	} else {
+		t := true
+		value = &t
+	}
+
+	return value
 }
