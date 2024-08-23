@@ -7,3 +7,5 @@ type MonthlyAggregationRecord struct {
 
 	VolumeActual float64
 }
+
+func (r MonthlyAggregationRecord) GetVolumeActual() float64 { return r.VolumeActual }

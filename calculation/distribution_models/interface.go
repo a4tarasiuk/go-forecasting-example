@@ -9,5 +9,5 @@ type DistributionModel interface {
 	Apply(
 		forecastRule *rules.ForecastRule,
 		forecastRecords []calculation.ForecastRecord,
-	) ([]calculation.DistributionResultRecord, error)
+	) ([]calculation.DistributionRecord, error)
 }

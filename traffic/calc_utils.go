@@ -1,16 +1,16 @@
 package traffic
 
-func CalculateTotalHistoricalVolume(trafficRecords []MonthlyAggregationRecord) float64 {
+func CalculateTotalHistoricalVolume[R volumedRecord](trafficRecords []R) float64 {
 	total := 0.0
 
 	for _, record := range trafficRecords {
-		total += record.VolumeActual
+		total += record.GetVolumeActual()
 	}
 
 	return total
 }
 
-func ShouldCalculateWithoutTraffic(trafficRecords []MonthlyAggregationRecord) bool {
+func ShouldCalculateWithoutTraffic[R volumedRecord](trafficRecords []R) bool {
 	trafficIsEmpty := len(trafficRecords) == 0
 
 	trafficIsZeroVolume := CalculateTotalHistoricalVolume(trafficRecords) == 0
