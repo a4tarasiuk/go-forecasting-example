@@ -7,10 +7,12 @@ import (
 )
 
 type ForecastRule struct {
-	ID int
+	ID int64
 
-	HomeOperators    []int
-	PartnerOperators []int
+	BudgetID int64
+
+	HomeOperators    []int64
+	PartnerOperators []int64
 
 	Period types.Period
 
