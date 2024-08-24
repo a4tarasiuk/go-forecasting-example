@@ -22,5 +22,7 @@ type (
 		Get(options BudgetTrafficOptions) []BudgetTrafficRecord
 
 		CreateMany(records []BudgetTrafficRecord)
+
+		ClearForecasted()
 	}
 )

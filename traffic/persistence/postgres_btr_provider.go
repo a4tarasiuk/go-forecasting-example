@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 
+	"forecasting/budget_defaults"
 	"forecasting/core"
 	"forecasting/postgres"
 	"forecasting/traffic"
@@ -190,7 +191,10 @@ INSERT INTO
 	if err != nil {
 		log.Fatal(err)
 	}
+}
 
+func (p *postgresBudgetTrafficProvider) ClearForecasted() {
+	p.db.Query(deleteManySQLQuery, budget_defaults.BudgetID)
 }
 
 const getManySQLQuery = `
@@ -220,4 +224,13 @@ WHERE bs.budget_id = $1
   	AND btr.service_type = $5
   	AND btr.traffic_month BETWEEN $6 AND $7
   	AND btr.traffic_type = 1
+`
+
+const deleteManySQLQuery = `
+DELETE FROM budget_traffic_records btr
+USING budget_snapshots bs
+WHERE bs.id = btr.budget_snapshot_id 
+  AND bs.type = 2 
+  AND bs.budget_id = $1
+  AND btr.traffic_type = 2
 `
