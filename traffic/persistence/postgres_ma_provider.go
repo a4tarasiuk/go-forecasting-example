@@ -17,9 +17,7 @@ type postgresMAProvider struct {
 }
 
 func NewPostgresMAProvider() *postgresMAProvider {
-	db := postgres.CreateDBConnection()
-
-	return &postgresMAProvider{db: db}
+	return &postgresMAProvider{db: postgres.DB}
 }
 
 func (p *postgresMAProvider) Get(

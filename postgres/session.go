@@ -2,6 +2,8 @@ package postgres
 
 import "database/sql"
 
+import _ "github.com/lib/pq"
+
 func CreateDBConnection() *sql.DB {
 	connStr := "postgresql://postgres:postgres@localhost/test?sslmode=disable" // TODO: Env
 
@@ -17,3 +19,5 @@ func CreateDBConnection() *sql.DB {
 
 	return db
 }
+
+var DB = CreateDBConnection()

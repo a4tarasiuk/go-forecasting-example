@@ -7,6 +7,7 @@ import (
 	"forecasting/core/types"
 	"forecasting/rules"
 	"forecasting/traffic"
+	"forecasting/traffic/persistence"
 )
 
 type manualVolume struct {
@@ -14,7 +15,7 @@ type manualVolume struct {
 }
 
 func NewManualVolume() manualVolume {
-	return manualVolume{trafficProvider: traffic.NewMonthlyAggregationProvider()}
+	return manualVolume{trafficProvider: persistence.NewPostgresMAProvider()}
 }
 
 func (model *manualVolume) Calculate(forecastRule *rules.ForecastRule) ([]calculation.ForecastRecord, error) {
@@ -116,7 +117,7 @@ func (model *manualVolume) calculateWithTraffic(
 
 func createTrafficPeriodFromForecasted(rule *rules.ForecastRule) types.Period {
 	validPeriod := types.Period{
-		StartDate: rule.LHM.SubYear().ToDateStruct(),
+		StartDate: rule.LHM.SubYear().AddMonth().ToDateStruct(),
 		EndDate:   rule.Period.EndDate.SubYear().ToDateStruct(),
 	}
 
