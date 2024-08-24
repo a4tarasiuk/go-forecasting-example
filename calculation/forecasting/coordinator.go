@@ -4,7 +4,10 @@ import (
 	"log"
 
 	"forecasting/budget_defaults"
+	"forecasting/postgres"
 	"forecasting/rules/persistence"
+	"forecasting/traffic"
+	persistence2 "forecasting/traffic/persistence"
 	"github.com/golang-module/carbon/v2"
 )
 
@@ -12,12 +15,15 @@ type ForecastRuleCalculationCoordinator struct {
 	forecastRulesRepository persistence.ForecastRuleRepository
 
 	forecastingService forecastingService
+
+	budgetTrafficProvider traffic.BudgetTrafficProvider
 }
 
 func NewForecastRuleCalculationCoordinator() ForecastRuleCalculationCoordinator {
 	return ForecastRuleCalculationCoordinator{
 		forecastRulesRepository: persistence.NewPostgresForecastRuleRepository(),
-		forecastingService:      NewService(),
+		forecastingService:      NewService(NewBudgetTrafficRecordMapper(postgres.DB, budget_defaults.BudgetID)),
+		budgetTrafficProvider:   persistence2.NewPostgresBudgetTrafficProvider(),
 	}
 }
 
@@ -36,6 +42,8 @@ func (c ForecastRuleCalculationCoordinator) CalculateAll() {
 
 		forecastRule.LHM = lhm
 
-		c.forecastingService.Evaluate(forecastRule)
+		budgetTrafficRecords := c.forecastingService.Evaluate(forecastRule)
+
+		c.budgetTrafficProvider.CreateMany(budgetTrafficRecords)
 	}
 }
