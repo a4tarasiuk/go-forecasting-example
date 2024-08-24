@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 
+	"forecasting/budget_defaults"
 	"forecasting/core"
 	"forecasting/core/types"
 	"forecasting/postgres"
@@ -17,14 +18,14 @@ type postgresForecastRuleRepository struct {
 	db *sql.DB
 }
 
-func NewPostgresForecastRuleRepository() postgresForecastRuleRepository {
+func NewPostgresForecastRuleRepository() *postgresForecastRuleRepository {
 	db := postgres.CreateDBConnection()
 
-	return postgresForecastRuleRepository{db: db}
+	return &postgresForecastRuleRepository{db: db}
 }
 
 func (r *postgresForecastRuleRepository) GetMany() []*rules.ForecastRule {
-	rows, err := r.db.Query(getManySQLQuery)
+	rows, err := r.db.Query(getManySQLQuery, budget_defaults.BudgetID)
 	defer rows.Close()
 
 	if err != nil {
@@ -127,7 +128,8 @@ SELECT
     distribution_moving_average_months,
     budget_id
 FROM 
-    forecast_rules`
+    forecast_rules
+WHERE budget_id = $1`
 
 func mapInt64Array(arr []sql.NullInt64) []int64 {
 	var values []int64

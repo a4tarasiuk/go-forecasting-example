@@ -1,6 +1,11 @@
 package budget_defaults
 
 const (
-	BudgetID  = 261
-	BudgetLHM = "2023-12-01"
+	BudgetID = 264
 )
+
+var month = "2024-02-01"
+
+var BudgetLHM *string = &month
+
+// var BudgetLHM *string

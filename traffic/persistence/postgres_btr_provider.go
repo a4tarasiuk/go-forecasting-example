@@ -16,9 +16,7 @@ type postgresBudgetTrafficProvider struct {
 }
 
 func NewPostgresBudgetTrafficProvider() *postgresBudgetTrafficProvider {
-	db := postgres.CreateDBConnection()
-
-	return &postgresBudgetTrafficProvider{db: db}
+	return &postgresBudgetTrafficProvider{db: postgres.DB}
 }
 
 func (p *postgresBudgetTrafficProvider) Get(options traffic.BudgetTrafficOptions) []traffic.BudgetTrafficRecord {
