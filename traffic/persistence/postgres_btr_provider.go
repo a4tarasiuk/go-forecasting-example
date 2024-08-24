@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"strconv"
 
@@ -69,7 +70,7 @@ func (p *postgresBudgetTrafficProvider) Get(options traffic.BudgetTrafficOptions
 		)
 
 		if _err != nil {
-			log.Fatal(_err)
+			log.Println(_err)
 		}
 
 		var cdValue *int64
@@ -120,6 +121,8 @@ func (p *postgresBudgetTrafficProvider) Get(options traffic.BudgetTrafficOptions
 }
 
 func (p *postgresBudgetTrafficProvider) CreateMany(records []traffic.BudgetTrafficRecord) {
+	defer recover()
+
 	insertManySQLQuery := `
 INSERT INTO
 	budget_traffic_records (
@@ -131,9 +134,7 @@ INSERT INTO
 	                        traffic_direction,
 	                        service_type,
 	                        call_destination,
-	                        called_country_id,
 	                        is_premium,
-	                        traffic_segment_id,
 	                        imsi_count_type,
 	                        volume_actual,
 	                        volume_billed,
@@ -147,6 +148,11 @@ INSERT INTO
 
 	vals := []interface{}{}
 
+	if len(records) == 0 {
+		log.Println("Zero collection for creation")
+		return
+	}
+
 	for i, r := range records {
 		vals = append(
 			vals,
@@ -157,10 +163,8 @@ INSERT INTO
 			r.TrafficType,
 			r.TrafficDirection,
 			r.ServiceType,
-			r.CallDestination,
-			r.CalledCountryID,
+			0,
 			r.IsPremium,
-			r.TrafficSegmentID,
 			r.IMSICountType,
 			r.VolumeActual,
 			0,
@@ -172,7 +176,7 @@ INSERT INTO
 			carbon.Now().ToDateString(),
 		)
 
-		numFields := 20 // the number of fields you are inserting
+		numFields := 18 // the number of fields you are inserting
 		n := i * numFields
 
 		insertManySQLQuery += `(`
@@ -189,12 +193,25 @@ INSERT INTO
 	_, err := stmt.Exec(vals...)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
 func (p *postgresBudgetTrafficProvider) ClearForecasted() {
 	p.db.Query(deleteManySQLQuery, budget_defaults.BudgetID)
+}
+
+func (p *postgresBudgetTrafficProvider) CountForecasted() {
+	rows, _ := p.db.Query("SELECT COUNT(id) FROM budget_traffic_records WHERE budget_snapshot_id = 498 AND traffic_type = 2")
+
+	defer rows.Close()
+
+	var totalRecords int64
+
+	rows.Next()
+	rows.Scan(&totalRecords)
+
+	fmt.Println("total created forecasted records - ", totalRecords)
 }
 
 const getManySQLQuery = `

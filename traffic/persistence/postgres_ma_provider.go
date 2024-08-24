@@ -50,7 +50,7 @@ func (p *postgresMAProvider) Get(
 		_err := rows.Scan(&monthStr, &volume)
 
 		if _err != nil {
-			log.Fatal(_err)
+			log.Println(_err)
 		}
 
 		agg := traffic.MonthlyAggregationRecord{

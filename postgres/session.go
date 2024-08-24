@@ -15,7 +15,7 @@ func CreateDBConnection() *sql.DB {
 	password := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 
-	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", user, password, host, port, dbName)
+	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbName)
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
