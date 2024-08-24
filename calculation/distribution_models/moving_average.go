@@ -6,6 +6,7 @@ import (
 	"forecasting/core/types"
 	"forecasting/rules"
 	"forecasting/traffic"
+	"forecasting/traffic/persistence"
 	"github.com/go-gota/gota/dataframe"
 	"github.com/go-gota/gota/series"
 )
@@ -15,7 +16,7 @@ type movingAverage struct {
 }
 
 func NewMovingAverage() movingAverage {
-	return movingAverage{budgetTrafficProvider: traffic.NewBudgetTrafficProvider()}
+	return movingAverage{budgetTrafficProvider: persistence.NewPostgresBudgetTrafficProvider()}
 }
 
 func (ma *movingAverage) Apply(
@@ -116,6 +117,7 @@ func (ma *movingAverage) calculateWithTraffic(
 	typesMap := map[string]series.Type{
 		"TrafficType":      series.Int,
 		"TrafficDirection": series.Int,
+		"TrafficSegmentID": series.Int,
 		"ServiceType":      series.Int,
 		"CalledCountryID":  series.Int,
 	}
@@ -160,11 +162,7 @@ func (ma *movingAverage) calculateWithTraffic(
 		forecastDfMap[forecastRecord] = historicalTrafficDF.Copy()
 	}
 
-	totalResultRecords := int64(historicalTrafficDF.Nrow()) * forecastRule.Period.GetTotalMonths()
-
-	distributionRecords := make([]calculation.DistributionRecord, totalResultRecords)
-
-	idx := 0
+	distributionRecords := make([]calculation.DistributionRecord, 0)
 
 	for forecastRecord, df := range forecastDfMap {
 
@@ -172,8 +170,8 @@ func (ma *movingAverage) calculateWithTraffic(
 			forecastedVolumeActual := row["ForecastCoefficient"].(float64) * forecastRecord.VolumeActual
 
 			_distributionRecord := calculation.DistributionRecord{
-				HomeOperatorID:    row["HomeOperatorID"].(int),
-				PartnerOperatorID: row["PartnerOperatorID"].(int),
+				HomeOperatorID:    int64(row["HomeOperatorID"].(int)),
+				PartnerOperatorID: int64(row["PartnerOperatorID"].(int)),
 				Month:             forecastRecord.Month,
 				CallDestination:   mapOptionalInt("CallDestination", row),
 				CalledCountryID:   mapOptionalInt("CalledCountryID", row),
@@ -183,9 +181,7 @@ func (ma *movingAverage) calculateWithTraffic(
 				VolumeActual:      forecastedVolumeActual,
 			}
 
-			distributionRecords[idx] = _distributionRecord
-
-			idx++
+			distributionRecords = append(distributionRecords, _distributionRecord)
 		}
 	}
 

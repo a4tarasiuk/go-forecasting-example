@@ -23,7 +23,7 @@ func (p *monthlyAggregationProvider) GetLast(
 
 func (p *monthlyAggregationProvider) Get(
 	forecastRule *rules.ForecastRule,
-	period *types.Period,
+	period types.Period,
 ) []MonthlyAggregationRecord {
 	return _HistoricalRecordsInForecastedPeriod
 }

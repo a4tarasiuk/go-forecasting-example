@@ -8,7 +8,7 @@ import (
 type MonthlyAggregationProvider interface {
 	GetLast(forecastRule *rules.ForecastRule, period *types.Period) []MonthlyAggregationRecord
 
-	Get(forecastRule *rules.ForecastRule, period *types.Period) []MonthlyAggregationRecord
+	Get(forecastRule *rules.ForecastRule, period types.Period) []MonthlyAggregationRecord
 }
 
 type (
