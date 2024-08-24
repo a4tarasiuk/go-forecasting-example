@@ -64,7 +64,7 @@ func (model *manualVolume) calculateWithoutTraffic(forecastRule *rules.ForecastR
 func (model *manualVolume) extractHistoricalVolumeFromForecasted(forecastRule *rules.ForecastRule) (float64, error) {
 	historicalPeriodInForecasted := types.NewPeriod(forecastRule.Period.StartDate, *forecastRule.LHM)
 
-	trafficRecords := model.trafficProvider.Get(forecastRule, &historicalPeriodInForecasted)
+	trafficRecords := model.trafficProvider.Get(forecastRule, historicalPeriodInForecasted)
 
 	totalHistoricalVolume := traffic.CalculateTotalHistoricalVolume(trafficRecords)
 

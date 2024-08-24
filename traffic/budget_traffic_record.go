@@ -6,11 +6,10 @@ import (
 )
 
 type BudgetTrafficRecord struct {
-	ID               int
-	BudgetSnapshotID int
+	BudgetSnapshotID int64
 
-	HomeOperatorID    int
-	PartnerOperatorID int
+	HomeOperatorID    int64
+	PartnerOperatorID int64
 
 	TrafficType      byte // Can be enum
 	TrafficDirection core.TrafficDirection
@@ -20,12 +19,12 @@ type BudgetTrafficRecord struct {
 	ServiceType core.ServiceType
 
 	CallDestination *byte
-	CalledCountryID *int
+	CalledCountryID *int64
 	IsPremium       *bool
 
 	IMSICountType *byte
 
-	TrafficSegmentID *byte
+	TrafficSegmentID *int64
 
 	VolumeActual float64
 }
@@ -34,7 +33,6 @@ func (r BudgetTrafficRecord) GetVolumeActual() float64 { return r.VolumeActual }
 
 func (r BudgetTrafficRecord) Serialize() map[string]interface{} {
 	return map[string]interface{}{
-		"ID":                r.ID,
 		"BudgetSnapshotID":  r.BudgetSnapshotID,
 		"HomeOperatorID":    r.HomeOperatorID,
 		"PartnerOperatorID": r.PartnerOperatorID,
@@ -65,7 +63,7 @@ func serializeNullableBool(val *bool) int {
 	return sVal
 }
 
-func serializeNullableNumber[V int | byte](val *V) int {
+func serializeNullableNumber[V int | int64 | byte](val *V) int {
 	if val == nil {
 		return -1
 	}

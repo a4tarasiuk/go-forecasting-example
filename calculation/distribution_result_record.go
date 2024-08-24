@@ -3,8 +3,8 @@ package calculation
 import "github.com/golang-module/carbon/v2"
 
 type DistributionRecord struct {
-	HomeOperatorID    int
-	PartnerOperatorID int
+	HomeOperatorID    int64
+	PartnerOperatorID int64
 
 	Month carbon.Date
 

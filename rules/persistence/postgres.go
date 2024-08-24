@@ -32,8 +32,8 @@ func NewPostgresForecastRuleRepository() postgresForecastRuleRepository {
 	return postgresForecastRuleRepository{db: db}
 }
 
-func (r *postgresForecastRuleRepository) GetMany() []rules.ForecastRule {
-	rows, err := r.db.Query(GetManySQLQuery)
+func (r *postgresForecastRuleRepository) GetMany() []*rules.ForecastRule {
+	rows, err := r.db.Query(getManySQLQuery)
 	defer rows.Close()
 
 	if err != nil {
@@ -49,7 +49,7 @@ func (r *postgresForecastRuleRepository) GetMany() []rules.ForecastRule {
 	var distributionModel int
 	var distributionMovingAverageMonths *int
 
-	var forecastRules []rules.ForecastRule
+	var forecastRules []*rules.ForecastRule
 
 	for rows.Next() {
 		_err := rows.Scan(
@@ -89,13 +89,13 @@ func (r *postgresForecastRuleRepository) GetMany() []rules.ForecastRule {
 			LHM:                                  nil, // TODO:
 		}
 
-		forecastRules = append(forecastRules, rule)
+		forecastRules = append(forecastRules, &rule)
 	}
 
 	return forecastRules
 }
 
-const GetManySQLQuery = `
+const getManySQLQuery = `
 SELECT 
     id,
     (
