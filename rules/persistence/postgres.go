@@ -6,6 +6,7 @@ import (
 
 	"forecasting/core"
 	"forecasting/core/types"
+	"forecasting/postgres"
 	"github.com/golang-module/carbon/v2"
 	"github.com/lib/pq"
 
@@ -17,17 +18,7 @@ type postgresForecastRuleRepository struct {
 }
 
 func NewPostgresForecastRuleRepository() postgresForecastRuleRepository {
-	connStr := "postgresql://postgres:postgres@localhost/test?sslmode=disable" // TODO: Env
-
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.Ping()
-	if err != nil {
-		panic(err)
-	}
+	db := postgres.CreateDBConnection()
 
 	return postgresForecastRuleRepository{db: db}
 }
