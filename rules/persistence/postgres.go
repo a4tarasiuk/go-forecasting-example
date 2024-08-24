@@ -60,7 +60,7 @@ func (r *postgresForecastRuleRepository) GetMany() []*rules.ForecastRule {
 		)
 
 		if _err != nil {
-			log.Fatal(_err)
+			log.Println(_err)
 		}
 
 		rule := rules.ForecastRule{

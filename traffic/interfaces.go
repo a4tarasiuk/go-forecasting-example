@@ -24,5 +24,7 @@ type (
 		CreateMany(records []BudgetTrafficRecord)
 
 		ClearForecasted()
+
+		CountForecasted()
 	}
 )
