@@ -18,7 +18,7 @@ type BudgetTrafficRecord struct {
 
 	ServiceType core.ServiceType
 
-	CallDestination *byte
+	CallDestination *int64
 	CalledCountryID *int64
 	IsPremium       *bool
 

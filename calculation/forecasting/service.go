@@ -7,6 +7,7 @@ import (
 	"forecasting/calculation/distribution_models"
 	"forecasting/calculation/forecast_models"
 	"forecasting/rules"
+	"forecasting/traffic"
 )
 
 type Service interface {
@@ -14,13 +15,14 @@ type Service interface {
 }
 
 type forecastingService struct {
+	mapper BudgetTrafficRecordMapper
 }
 
-func NewService() forecastingService {
-	return forecastingService{}
+func NewService(mapper BudgetTrafficRecordMapper) forecastingService {
+	return forecastingService{mapper: mapper}
 }
 
-func (s *forecastingService) Evaluate(forecastRule *rules.ForecastRule) {
+func (s *forecastingService) Evaluate(forecastRule *rules.ForecastRule) []traffic.BudgetTrafficRecord {
 
 	forecastModel := forecast_models.NewManualVolume()
 
@@ -28,21 +30,23 @@ func (s *forecastingService) Evaluate(forecastRule *rules.ForecastRule) {
 
 	if err != nil {
 		log.Print("rule skipped after forecast", forecastRule)
-		return
+		return nil
 	}
 
 	distributionModel := distribution_models.NewMovingAverage()
 
-	_, _err := distributionModel.Apply(forecastRule, forecastRecords)
+	distributionRecords, _err := distributionModel.Apply(forecastRule, forecastRecords)
 
 	if _err != nil {
 		log.Print("rule skipped after distribution", forecastRule)
-		return
+		return nil
 	}
 
-	// for _, r := range distributionRecords {
-	// 	fmt.Printf("%+v\n", r)
-	// }
+	budgetTrafficRecords := make([]traffic.BudgetTrafficRecord, len(distributionRecords))
 
-	// TODO: Map to budget traffic records or use interface to that table to write them directly to DB
+	for idx, _distributionRecord := range distributionRecords {
+		budgetTrafficRecords[idx] = s.mapper.FromDistributionToBudgetTrafficRecord(forecastRule, _distributionRecord)
+	}
+
+	return budgetTrafficRecords
 }

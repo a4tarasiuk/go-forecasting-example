@@ -20,5 +20,7 @@ type (
 
 	BudgetTrafficProvider interface {
 		Get(options BudgetTrafficOptions) []BudgetTrafficRecord
+
+		CreateMany(records []BudgetTrafficRecord)
 	}
 )

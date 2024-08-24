@@ -3,6 +3,7 @@ package persistence
 import (
 	"database/sql"
 	"log"
+	"strconv"
 
 	"forecasting/core"
 	"forecasting/postgres"
@@ -40,9 +41,9 @@ func (p *postgresBudgetTrafficProvider) Get(options traffic.BudgetTrafficOptions
 	}
 
 	var budgetSnapshotID, homeOperatorID, partnerOperatorID int64
-	var trafficSegmentID, calledCountryID sql.NullInt64
+	var trafficSegmentID, calledCountryID, callDestination sql.NullInt64
 	var trafficType, trafficDirection, serviceType byte
-	var imsiCountType, callDestination sql.NullByte
+	var imsiCountType sql.NullByte
 	var sqlTrafficMonth string
 	var isPremium sql.NullBool
 	var volume float64
@@ -70,9 +71,9 @@ func (p *postgresBudgetTrafficProvider) Get(options traffic.BudgetTrafficOptions
 			log.Fatal(_err)
 		}
 
-		var cdValue *byte
+		var cdValue *int64
 		if callDestination.Valid {
-			cdValue = &callDestination.Byte
+			cdValue = &callDestination.Int64
 		}
 
 		var calledCountryIDValue *int64
@@ -115,6 +116,81 @@ func (p *postgresBudgetTrafficProvider) Get(options traffic.BudgetTrafficOptions
 	}
 
 	return budgetTrafficRecords
+}
+
+func (p *postgresBudgetTrafficProvider) CreateMany(records []traffic.BudgetTrafficRecord) {
+	insertManySQLQuery := `
+INSERT INTO
+	budget_traffic_records (
+	                        budget_snapshot_id,
+	                    	home_operator_id,
+	                        partner_operator_id,
+	                        traffic_month,
+	                        traffic_type,
+	                        traffic_direction,
+	                        service_type,
+	                        call_destination,
+	                        called_country_id,
+	                        is_premium,
+	                        traffic_segment_id,
+	                        imsi_count_type,
+	                        volume_actual,
+	                        volume_billed,
+	                        tap_charge_net,
+	                        tap_charge_gross,
+	                        charge_net,
+	                        charge_gross,
+	                        created_at,
+	                        updated_at
+	                        ) VALUES `
+
+	vals := []interface{}{}
+
+	for i, r := range records {
+		vals = append(
+			vals,
+			r.BudgetSnapshotID,
+			r.HomeOperatorID,
+			r.PartnerOperatorID,
+			r.Month.ToDateString(),
+			r.TrafficType,
+			r.TrafficDirection,
+			r.ServiceType,
+			r.CallDestination,
+			r.CalledCountryID,
+			r.IsPremium,
+			r.TrafficSegmentID,
+			r.IMSICountType,
+			r.VolumeActual,
+			0,
+			0,
+			0,
+			0,
+			0,
+			carbon.Now().ToDateString(),
+			carbon.Now().ToDateString(),
+		)
+
+		numFields := 20 // the number of fields you are inserting
+		n := i * numFields
+
+		insertManySQLQuery += `(`
+		for j := 0; j < numFields; j++ {
+			insertManySQLQuery += `$` + strconv.Itoa(n+j+1) + `,`
+		}
+		insertManySQLQuery = insertManySQLQuery[:len(insertManySQLQuery)-1] + `),`
+	}
+
+	insertManySQLQuery = insertManySQLQuery[0 : len(insertManySQLQuery)-1]
+
+	stmt, _ := p.db.Prepare(insertManySQLQuery)
+
+	_, err := stmt.Exec(vals...)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 }
 
 const getManySQLQuery = `
