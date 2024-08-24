@@ -28,6 +28,8 @@ func NewForecastRuleCalculationCoordinator() ForecastRuleCalculationCoordinator 
 }
 
 func (c ForecastRuleCalculationCoordinator) CalculateAll() {
+	c.budgetTrafficProvider.ClearForecasted()
+
 	forecastRules := c.forecastRulesRepository.GetMany()
 
 	var lhm *carbon.Date
