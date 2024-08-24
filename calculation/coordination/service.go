@@ -1,4 +1,4 @@
-package forecasting
+package coordination
 
 import (
 	"log"
