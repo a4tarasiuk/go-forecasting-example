@@ -22,7 +22,9 @@ func (model *manualVolume) Calculate(forecastRule *rules.ForecastRule) ([]calcul
 		return model.calculateWithoutTraffic(forecastRule), nil
 	}
 
-	trafficRecords := model.trafficProvider.GetLast(forecastRule, nil)
+	trafficPeriod := createTrafficPeriodFromForecasted(forecastRule)
+
+	trafficRecords := model.trafficProvider.GetLast(forecastRule, trafficPeriod)
 
 	if traffic.ShouldCalculateWithoutTraffic(trafficRecords) {
 		return model.calculateWithoutTraffic(forecastRule), nil
@@ -110,4 +112,20 @@ func (model *manualVolume) calculateWithTraffic(
 	}
 
 	return forecastRecords
+}
+
+func createTrafficPeriodFromForecasted(rule *rules.ForecastRule) types.Period {
+	validPeriod := types.Period{
+		StartDate: rule.LHM.SubYear().ToDateStruct(),
+		EndDate:   rule.Period.EndDate.SubYear().ToDateStruct(),
+	}
+
+	if validPeriod.GetTotalMonths() > 12 {
+		validPeriod = types.Period{
+			StartDate: validPeriod.StartDate,
+			EndDate:   validPeriod.StartDate.EndOfYear().ToDateStruct(),
+		}
+	}
+
+	return validPeriod
 }

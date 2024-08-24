@@ -15,7 +15,7 @@ func NewMonthlyAggregationProvider() *monthlyAggregationProvider {
 
 func (p *monthlyAggregationProvider) GetLast(
 	forecastRule *rules.ForecastRule,
-	period *types.Period,
+	period types.Period,
 ) []MonthlyAggregationRecord {
 
 	return _TrafficRecordsWithVolume
