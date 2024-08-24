@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	"forecasting/core/types"
@@ -61,12 +60,70 @@ func (p *postgresMAProvider) Get(
 			Month:        carbon.Parse(monthStr).ToDateStruct(),
 		}
 
-		fmt.Printf("%+v\n", agg)
-
 		aggregations = append(aggregations, agg)
 	}
 
 	return aggregations
+}
+
+func (p *postgresMAProvider) GetLast(
+	forecastRule *rules.ForecastRule,
+	period types.Period,
+) []traffic.MonthlyAggregationRecord {
+	rows, err := p.db.Query("SELECT start_date FROM budgets WHERE id = $1", forecastRule.BudgetID)
+	defer rows.Close()
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var budgetStartDateStr string
+
+	rows.Next()
+	rows.Scan(&budgetStartDateStr)
+
+	budgetStartDate := carbon.Parse(budgetStartDateStr).ToDateStruct()
+
+	fullPeriod := types.Period{StartDate: budgetStartDate, EndDate: period.EndDate}
+
+	aggregations := p.Get(forecastRule, fullPeriod)
+
+	searchPeriod := period
+
+	if searchPeriod.GetTotalMonths() > 12 {
+		searchPeriod = types.Period{
+			StartDate: searchPeriod.StartDate,
+			EndDate:   searchPeriod.StartDate.EndOfYear().ToDateStruct(),
+		}
+	}
+
+	if searchPeriod.StartDate.Compare("<", budgetStartDate.Carbon) {
+		searchPeriod.StartDate = budgetStartDate
+	}
+
+	var lastRecords []traffic.MonthlyAggregationRecord
+
+	for budgetStartDate.Compare("<", searchPeriod.StartDate.Carbon) {
+		lastRecords = make([]traffic.MonthlyAggregationRecord, 0)
+
+		for _, r := range aggregations {
+			if searchPeriod.Contains(r.Month) {
+				lastRecords = append(lastRecords, r)
+			}
+		}
+
+		if len(lastRecords) > 0 {
+			break
+		}
+
+		searchPeriod = types.Period{
+			StartDate: searchPeriod.StartDate.SubYear().ToDateStruct(),
+			EndDate:   searchPeriod.EndDate.SubYear().ToDateStruct(),
+		}
+
+	}
+
+	return lastRecords
 }
 
 const getManyAggSQLQuery = `
