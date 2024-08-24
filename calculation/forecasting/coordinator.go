@@ -28,9 +28,11 @@ func NewForecastRuleCalculationCoordinator() ForecastRuleCalculationCoordinator 
 }
 
 func (c ForecastRuleCalculationCoordinator) CalculateAll() {
-	c.budgetTrafficProvider.ClearForecasted()
+	log.Println("Start forecast rules retrieving")
 
 	forecastRules := c.forecastRulesRepository.GetMany()
+
+	log.Println("Forecast rules are retrieved")
 
 	var lhm *carbon.Date
 
@@ -39,13 +41,15 @@ func (c ForecastRuleCalculationCoordinator) CalculateAll() {
 		lhm = &dt
 	}
 
-	for _, forecastRule := range forecastRules {
-		log.Print("start apply rule ", forecastRule.ID)
+	log.Println("Forecast rules application started")
 
+	for _, forecastRule := range forecastRules {
 		forecastRule.LHM = lhm
 
 		budgetTrafficRecords := c.forecastingService.Evaluate(forecastRule)
 
 		c.budgetTrafficProvider.CreateMany(budgetTrafficRecords)
 	}
+
+	log.Println("Forecast rules application finished")
 }
