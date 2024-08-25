@@ -91,7 +91,7 @@ func (p *postgresMAProvider) GetLast(
 	if searchPeriod.GetTotalMonths() > 12 {
 		searchPeriod = types.Period{
 			StartDate: searchPeriod.StartDate,
-			EndDate:   searchPeriod.StartDate.EndOfYear().ToDateStruct(),
+			EndDate:   searchPeriod.StartDate.AddMonths(12 - 1).ToDateStruct(),
 		}
 	}
 
