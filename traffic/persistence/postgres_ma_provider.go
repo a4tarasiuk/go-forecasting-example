@@ -133,7 +133,7 @@ FROM
 	INNER JOIN 
     	budget_snapshots bs
 	ON 
-	    btr.budget_snapshot_id = bs.id AND bs.type = 1
+	    btr.budget_snapshot_id = bs.id AND bs.type = 2
 WHERE bs.budget_id = $1
   	AND btr.home_operator_id = ANY($2)
   	AND btr.partner_operator_id = ANY($3)
