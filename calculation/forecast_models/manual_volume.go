@@ -20,22 +20,27 @@ func NewManualVolume() manualVolume {
 
 func (model *manualVolume) Calculate(forecastRule *rules.ForecastRule) ([]calculation.ForecastRecord, error) {
 	if forecastRule.LHM == nil {
-		return model.calculateWithoutTraffic(forecastRule), nil
+		// LHM is not set then it will not be calculated
+		return model.calculateWithoutTraffic(forecastRule)
 	}
 
-	trafficPeriod := createTrafficPeriodFromForecasted(forecastRule)
+	trafficPeriod, err := createTrafficPeriodFromForecasted(forecastRule)
+
+	if err != nil {
+		return nil, err
+	}
 
 	trafficRecords := model.trafficProvider.GetLast(forecastRule, trafficPeriod)
 
 	if traffic.ShouldCalculateWithoutTraffic(trafficRecords) {
-		return model.calculateWithoutTraffic(forecastRule), nil
+		return model.calculateWithoutTraffic(forecastRule)
 	}
 
 	if forecastRule.Period.Contains(*forecastRule.LHM) {
-		adjustedForecastedVolume, err := model.extractHistoricalVolumeFromForecasted(forecastRule)
+		adjustedForecastedVolume, _err := model.extractHistoricalVolumeFromForecasted(forecastRule)
 
-		if err != nil {
-			return nil, err
+		if _err != nil {
+			return nil, _err
 		}
 
 		forecastRule.Volume = adjustedForecastedVolume
@@ -46,8 +51,17 @@ func (model *manualVolume) Calculate(forecastRule *rules.ForecastRule) ([]calcul
 	return forecastRecords, nil
 }
 
-func (model *manualVolume) calculateWithoutTraffic(forecastRule *rules.ForecastRule) []calculation.ForecastRecord {
-	months := forecastRule.Period.GetMonths()
+func (model *manualVolume) calculateWithoutTraffic(forecastRule *rules.ForecastRule) (
+	[]calculation.ForecastRecord,
+	error,
+) {
+	validatedPeriod, err := forecastRule.GetValidatedPeriod()
+
+	if err != nil {
+		return nil, err
+	}
+
+	months := validatedPeriod.GetMonths()
 
 	totalMonths := len(months)
 
@@ -61,7 +75,7 @@ func (model *manualVolume) calculateWithoutTraffic(forecastRule *rules.ForecastR
 		forecastRecords[idx] = record
 	}
 
-	return forecastRecords
+	return forecastRecords, nil
 }
 
 func (model *manualVolume) extractHistoricalVolumeFromForecasted(forecastRule *rules.ForecastRule) (float64, error) {
@@ -89,7 +103,9 @@ func (model *manualVolume) calculateWithTraffic(
 
 	totalForecastedVolume := forecastRule.Volume
 
-	totalForecastedMonths := forecastRule.Period.GetTotalMonths()
+	validatedPeriod, _ := forecastRule.GetValidatedPeriod()
+
+	totalForecastedMonths := validatedPeriod.GetTotalMonths()
 
 	historicalTrafficMonthMap := make(map[string]traffic.MonthlyAggregationRecord, totalForecastedMonths)
 
@@ -99,7 +115,7 @@ func (model *manualVolume) calculateWithTraffic(
 
 	forecastRecords := make([]calculation.ForecastRecord, totalForecastedMonths)
 
-	for idx, forecastedMonth := range forecastRule.Period.GetMonths() {
+	for idx, forecastedMonth := range validatedPeriod.GetMonths() {
 		historicalRecord := historicalTrafficMonthMap[forecastedMonth.SubYear().ToDateString()]
 
 		forecastedVolumeActual := (historicalRecord.VolumeActual / totalHistoricalVolume) * totalForecastedVolume
@@ -115,18 +131,24 @@ func (model *manualVolume) calculateWithTraffic(
 	return forecastRecords
 }
 
-func createTrafficPeriodFromForecasted(rule *rules.ForecastRule) types.Period {
-	validPeriod := types.Period{
-		StartDate: rule.LHM.SubYear().AddMonth().ToDateStruct(),
-		EndDate:   rule.Period.EndDate.SubYear().ToDateStruct(),
+func createTrafficPeriodFromForecasted(rule *rules.ForecastRule) (types.Period, error) {
+	forecastPeriod, err := rule.GetValidatedPeriod()
+
+	if err != nil {
+		return types.Period{}, nil
 	}
 
-	if validPeriod.GetTotalMonths() > 12 {
-		validPeriod = types.Period{
-			StartDate: validPeriod.StartDate,
-			EndDate:   validPeriod.StartDate.EndOfYear().ToDateStruct(),
+	budgetTrafficPeriod := types.Period{
+		StartDate: forecastPeriod.StartDate.SubYear().ToDateStruct(),
+		EndDate:   forecastPeriod.EndDate.SubYear().ToDateStruct(),
+	}
+
+	if forecastPeriod.GetTotalMonths() > 12 {
+		budgetTrafficPeriod = types.Period{
+			StartDate: budgetTrafficPeriod.StartDate,
+			EndDate:   budgetTrafficPeriod.StartDate.AddMonths(12 - 1).ToDateStruct(),
 		}
 	}
 
-	return validPeriod
+	return budgetTrafficPeriod, nil
 }

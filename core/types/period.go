@@ -32,7 +32,7 @@ func (p *Period) GetMonths() []carbon.Date {
 	for idx := range totalMonths {
 		months[idx] = month
 
-		month = month.Carbon.AddMonth().ToDateStruct()
+		month = month.Carbon.AddMonth().StartOfMonth().ToDateStruct()
 	}
 
 	return months

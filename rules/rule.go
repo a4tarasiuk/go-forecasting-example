@@ -29,3 +29,19 @@ type ForecastRule struct {
 
 	LHM *carbon.Date
 }
+
+func (r *ForecastRule) GetValidatedPeriod() (types.Period, error) {
+	forecastStartDate, forecastEndDate := r.Period.StartDate, r.Period.EndDate
+
+	if forecastEndDate.StartOfMonth().Compare("<=", r.LHM.Carbon) {
+		return types.Period{}, nil
+	}
+
+	if r.Period.Contains(*r.LHM) {
+		forecastEndDate = r.LHM.AddMonth().ToDateStruct()
+	}
+
+	forecastPeriod := types.Period{StartDate: forecastStartDate, EndDate: forecastEndDate}
+
+	return forecastPeriod, nil
+}
