@@ -82,17 +82,17 @@ func (p *postgresMAProvider) GetLast(
 
 	budgetStartDate := carbon.Parse(budgetStartDateStr).ToDateStruct()
 
-	fullPeriod := types.Period{StartDate: budgetStartDate, EndDate: period.EndDate}
+	fullPeriod := types.NewPeriod(budgetStartDate, period.EndDate)
 
 	aggregations := p.Get(forecastRule, fullPeriod)
 
 	searchPeriod := period
 
 	if searchPeriod.GetTotalMonths() > 12 {
-		searchPeriod = types.Period{
-			StartDate: searchPeriod.StartDate,
-			EndDate:   searchPeriod.StartDate.EndOfYear().ToDateStruct(),
-		}
+		searchPeriod = types.NewPeriod(
+			searchPeriod.StartDate,
+			searchPeriod.StartDate.AddMonths(12-1).ToDateStruct(),
+		)
 	}
 
 	if searchPeriod.StartDate.Compare("<", budgetStartDate.Carbon) {
@@ -114,10 +114,10 @@ func (p *postgresMAProvider) GetLast(
 			break
 		}
 
-		searchPeriod = types.Period{
-			StartDate: searchPeriod.StartDate.SubYear().ToDateStruct(),
-			EndDate:   searchPeriod.EndDate.SubYear().ToDateStruct(),
-		}
+		searchPeriod = types.NewPeriod(
+			searchPeriod.StartDate.SubYear().ToDateStruct(),
+			searchPeriod.EndDate.SubYear().ToDateStruct(),
+		)
 
 	}
 

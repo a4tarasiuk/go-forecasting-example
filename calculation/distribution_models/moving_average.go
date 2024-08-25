@@ -26,9 +26,9 @@ func (ma *movingAverage) Apply(
 	[]calculation.DistributionRecord,
 	error,
 ) {
-	if forecastRule.LHM == nil {
-		return ma.calculateWithoutTraffic(forecastRule, forecastRecords), nil
-	}
+	// if forecastRule.LHM == nil {
+	// 	return ma.calculateWithoutTraffic(forecastRule, forecastRecords), nil
+	// }
 
 	historicalTrafficRecords := ma.loadHistoricalTraffic(forecastRule)
 
@@ -36,11 +36,11 @@ func (ma *movingAverage) Apply(
 		return ma.calculateWithoutTraffic(forecastRule, forecastRecords), nil
 	}
 
-	return ma.calculateWithTraffic(forecastRule, forecastRecords, historicalTrafficRecords), nil
+	return ma.calculateWithTraffic(forecastRecords, historicalTrafficRecords), nil
 }
 
 func (ma *movingAverage) loadHistoricalTraffic(forecastRule *rules.ForecastRule) []traffic.BudgetTrafficRecord {
-	nMonthPeriodEndDate := forecastRule.LHM.SubMonth().ToDateStruct()
+	nMonthPeriodEndDate := forecastRule.LHM
 
 	monthsToSub := *forecastRule.DistributionModelMovingAverageMonths - 1
 
@@ -66,7 +66,7 @@ func (ma *movingAverage) calculateWithoutTraffic(
 
 	totalHomeOperators := int64(len(forecastRule.HomeOperators))
 	totalPartnerOperators := int64(len(forecastRule.PartnerOperators))
-	totalMonths := forecastRule.Period.GetTotalMonths()
+	totalMonths := int64(len(forecastRecords))
 
 	totalResultRecords := totalHomeOperators * totalPartnerOperators * totalMonths
 
@@ -103,7 +103,6 @@ func (ma *movingAverage) calculateWithoutTraffic(
 }
 
 func (ma *movingAverage) calculateWithTraffic(
-	forecastRule *rules.ForecastRule,
 	forecastRecords []calculation.ForecastRecord,
 	historicalRecords []traffic.BudgetTrafficRecord,
 ) []calculation.DistributionRecord {

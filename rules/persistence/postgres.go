@@ -68,17 +68,17 @@ func (r *postgresForecastRuleRepository) GetMany() []*rules.ForecastRule {
 			BudgetID:         budgetID,
 			HomeOperators:    mapInt64Array(sqlHomeOperators),
 			PartnerOperators: mapInt64Array(sqlPartnerOperators),
-			Period: types.Period{
-				StartDate: carbon.Parse(startDate).ToDateStruct(),
-				EndDate:   carbon.Parse(endDate).ToDateStruct(),
-			},
+			Period: types.NewPeriod(
+				carbon.Parse(startDate).ToDateStruct(),
+				carbon.Parse(endDate).ToDateStruct(),
+			),
 			TrafficDirection:                     core.TrafficDirection(trafficDirection),
 			ServiceType:                          core.ServiceType(serviceType),
 			ForecastModel:                        core.ForecastModel(forecastModel),
 			DistributionModel:                    core.DistributionModel(distributionModel),
 			Volume:                               volume,
 			DistributionModelMovingAverageMonths: distributionMovingAverageMonths,
-			LHM:                                  nil, // TODO:
+			LHM:                                  carbon.Parse("2024-02-01").ToDateStruct(), // TODO:
 		}
 
 		forecastRules = append(forecastRules, &rule)

@@ -1,6 +1,8 @@
 package rules
 
 import (
+	"errors"
+
 	"forecasting/core"
 	"forecasting/core/types"
 	"github.com/golang-module/carbon/v2"
@@ -27,5 +29,21 @@ type ForecastRule struct {
 
 	DistributionModelMovingAverageMonths *int
 
-	LHM *carbon.Date
+	LHM carbon.Date
+}
+
+func (r *ForecastRule) GetValidatedPeriod() (types.Period, error) {
+	forecastStartDate, forecastEndDate := r.Period.StartDate, r.Period.EndDate
+
+	if forecastEndDate.StartOfMonth().Compare("<=", r.LHM.Carbon) {
+		return types.Period{}, errors.New("forecasted period is before LHM")
+	}
+
+	if r.Period.Contains(r.LHM) {
+		forecastStartDate = r.LHM.AddMonth().ToDateStruct()
+	}
+
+	forecastPeriod := types.NewPeriod(forecastStartDate, forecastEndDate)
+
+	return forecastPeriod, nil
 }
