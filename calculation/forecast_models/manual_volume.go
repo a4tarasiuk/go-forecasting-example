@@ -37,13 +37,13 @@ func (model *manualVolume) Calculate(forecastRule *rules.ForecastRule) ([]calcul
 	}
 
 	if forecastRule.Period.Contains(*forecastRule.LHM) {
-		adjustedForecastedVolume, _err := model.extractHistoricalVolumeFromForecasted(forecastRule)
+		adjustedForecastVolume, _err := model.extractHistoricalVolumeFromForecasted(forecastRule)
 
 		if _err != nil {
 			return nil, _err
 		}
 
-		forecastRule.Volume = adjustedForecastedVolume
+		forecastRule.Volume = adjustedForecastVolume
 	}
 
 	forecastRecords := model.calculateWithTraffic(forecastRule, trafficRecords)
