@@ -63,5 +63,7 @@ func (c ForecastRuleCalculationCoordinator) CalculateAll() {
 
 	c.budgetTrafficProvider.CountForecasted()
 
+	log.Println("Total not calculated rules: ", c.forecastingService.TotalNotCalculatedRules)
+
 	log.Println("Finished")
 }
