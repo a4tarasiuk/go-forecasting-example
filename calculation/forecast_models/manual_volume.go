@@ -133,7 +133,7 @@ func createTrafficPeriodFromForecasted(rule *rules.ForecastRule) (types.Period, 
 	forecastPeriod, err := rule.GetValidatedPeriod()
 
 	if err != nil {
-		return types.Period{}, nil
+		return types.Period{}, err
 	}
 
 	budgetTrafficPeriod := types.NewPeriod(

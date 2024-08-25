@@ -40,19 +40,12 @@ func (c ForecastRuleCalculationCoordinator) CalculateAll() {
 
 	log.Println("Forecast rules are retrieved - ", len(forecastRules))
 
-	var lhm *carbon.Date
-
-	if budget_defaults.BudgetLHM != nil {
-		dt := carbon.Parse(*budget_defaults.BudgetLHM).ToDateStruct()
-		lhm = &dt
-	}
-
 	log.Println("Forecast rules application started")
 
 	ruleCounter := 0
 
 	for _, forecastRule := range forecastRules {
-		forecastRule.LHM = lhm
+		forecastRule.LHM = carbon.Parse("2024-02-01").ToDateStruct()
 
 		budgetTrafficRecords := c.forecastingService.Evaluate(forecastRule)
 
@@ -69,4 +62,6 @@ func (c ForecastRuleCalculationCoordinator) CalculateAll() {
 	log.Println("Forecast rules application finished")
 
 	c.budgetTrafficProvider.CountForecasted()
+
+	log.Println("Finished")
 }

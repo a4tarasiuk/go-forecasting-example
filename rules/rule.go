@@ -1,6 +1,8 @@
 package rules
 
 import (
+	"errors"
+
 	"forecasting/core"
 	"forecasting/core/types"
 	"github.com/golang-module/carbon/v2"
@@ -34,7 +36,7 @@ func (r *ForecastRule) GetValidatedPeriod() (types.Period, error) {
 	forecastStartDate, forecastEndDate := r.Period.StartDate, r.Period.EndDate
 
 	if forecastEndDate.StartOfMonth().Compare("<=", r.LHM.Carbon) {
-		return types.Period{}, nil
+		return types.Period{}, errors.New("forecasted period is before LHM")
 	}
 
 	if r.Period.Contains(r.LHM) {
