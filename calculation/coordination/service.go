@@ -1,8 +1,6 @@
 package coordination
 
 import (
-	"log"
-
 	"forecasting/calculation"
 	"forecasting/calculation/distribution_models"
 	"forecasting/calculation/forecast_models"
@@ -16,10 +14,12 @@ type Service interface {
 
 type forecastingService struct {
 	mapper BudgetTrafficRecordMapper
+
+	TotalNotCalculatedRules int
 }
 
 func NewService(mapper BudgetTrafficRecordMapper) forecastingService {
-	return forecastingService{mapper: mapper}
+	return forecastingService{mapper: mapper, TotalNotCalculatedRules: 0}
 }
 
 func (s *forecastingService) Evaluate(forecastRule *rules.ForecastRule) []traffic.BudgetTrafficRecord {
@@ -29,7 +29,7 @@ func (s *forecastingService) Evaluate(forecastRule *rules.ForecastRule) []traffi
 	forecastRecords, err := forecastModel.Calculate(forecastRule)
 
 	if err != nil {
-		log.Print("rule skipped after forecast", forecastRule)
+		s.TotalNotCalculatedRules++
 		return nil
 	}
 
@@ -38,7 +38,7 @@ func (s *forecastingService) Evaluate(forecastRule *rules.ForecastRule) []traffi
 	distributionRecords, _err := distributionModel.Apply(forecastRule, forecastRecords)
 
 	if _err != nil {
-		log.Print("rule skipped after distribution", forecastRule)
+		s.TotalNotCalculatedRules++
 		return nil
 	}
 
