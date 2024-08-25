@@ -26,10 +26,6 @@ func (ma *movingAverage) Apply(
 	[]calculation.DistributionRecord,
 	error,
 ) {
-	// if forecastRule.LHM == nil {
-	// 	return ma.calculateWithoutTraffic(forecastRule, forecastRecords), nil
-	// }
-
 	historicalTrafficRecords := ma.loadHistoricalTraffic(forecastRule)
 
 	if traffic.ShouldCalculateWithoutTraffic(historicalTrafficRecords) {

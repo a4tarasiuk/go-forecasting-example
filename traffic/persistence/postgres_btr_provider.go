@@ -149,7 +149,6 @@ INSERT INTO
 	vals := []interface{}{}
 
 	if len(records) == 0 {
-		log.Println("Zero collection for creation")
 		return
 	}
 

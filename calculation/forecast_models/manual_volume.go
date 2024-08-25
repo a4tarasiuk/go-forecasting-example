@@ -19,11 +19,6 @@ func NewManualVolume() manualVolume {
 }
 
 func (model *manualVolume) Calculate(forecastRule *rules.ForecastRule) ([]calculation.ForecastRecord, error) {
-	// if forecastRule.LHM == nil {
-	// 	LHM is not set then it will not be calculated
-	// return model.calculateWithoutTraffic(forecastRule)
-	// }
-
 	trafficPeriod, err := createTrafficPeriodFromForecasted(forecastRule)
 
 	if err != nil {
