@@ -27,7 +27,7 @@ type ForecastRule struct {
 
 	DistributionModelMovingAverageMonths *int
 
-	LHM *carbon.Date
+	LHM carbon.Date
 }
 
 func (r *ForecastRule) GetValidatedPeriod() (types.Period, error) {
@@ -37,11 +37,11 @@ func (r *ForecastRule) GetValidatedPeriod() (types.Period, error) {
 		return types.Period{}, nil
 	}
 
-	if r.Period.Contains(*r.LHM) {
-		forecastEndDate = r.LHM.AddMonth().ToDateStruct()
+	if r.Period.Contains(r.LHM) {
+		forecastStartDate = r.LHM.AddMonth().ToDateStruct()
 	}
 
-	forecastPeriod := types.Period{StartDate: forecastStartDate, EndDate: forecastEndDate}
+	forecastPeriod := types.NewPeriod(forecastStartDate, forecastEndDate)
 
 	return forecastPeriod, nil
 }

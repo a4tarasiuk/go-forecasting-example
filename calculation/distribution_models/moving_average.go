@@ -26,9 +26,9 @@ func (ma *movingAverage) Apply(
 	[]calculation.DistributionRecord,
 	error,
 ) {
-	if forecastRule.LHM == nil {
-		return ma.calculateWithoutTraffic(forecastRule, forecastRecords), nil
-	}
+	// if forecastRule.LHM == nil {
+	// 	return ma.calculateWithoutTraffic(forecastRule, forecastRecords), nil
+	// }
 
 	historicalTrafficRecords := ma.loadHistoricalTraffic(forecastRule)
 
@@ -40,7 +40,7 @@ func (ma *movingAverage) Apply(
 }
 
 func (ma *movingAverage) loadHistoricalTraffic(forecastRule *rules.ForecastRule) []traffic.BudgetTrafficRecord {
-	nMonthPeriodEndDate := *forecastRule.LHM
+	nMonthPeriodEndDate := forecastRule.LHM
 
 	monthsToSub := *forecastRule.DistributionModelMovingAverageMonths - 1
 
