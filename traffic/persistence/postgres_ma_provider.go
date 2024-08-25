@@ -140,7 +140,6 @@ WHERE bs.budget_id = $1
   	AND btr.traffic_direction = $4
   	AND btr.service_type = $5
   	AND btr.traffic_month BETWEEN $6 AND $7
-  	AND btr.traffic_type = 1
 GROUP BY btr.traffic_month
 ORDER BY btr.traffic_month
 `
