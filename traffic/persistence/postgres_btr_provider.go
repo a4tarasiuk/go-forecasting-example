@@ -50,7 +50,7 @@ func (p *postgresBudgetTrafficProvider) Get(options traffic.BudgetTrafficOptions
 	var isPremium sql.NullBool
 	var volume float64
 
-	budgetTrafficRecords := make([]traffic.BudgetTrafficRecord, 0)
+	var budgetTrafficRecords []traffic.BudgetTrafficRecord
 
 	for rows.Next() {
 		_err := rows.Scan(
