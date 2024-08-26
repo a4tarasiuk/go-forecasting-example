@@ -14,6 +14,8 @@ type ForecastRuleCalculationCoordinator struct {
 	forecastingService forecastingService
 
 	budgetTrafficProvider providers.BudgetTrafficProvider
+
+	budgetTrafficFactory *BudgetTrafficFactory
 }
 
 func NewForecastRuleCalculationCoordinator(
@@ -26,6 +28,7 @@ func NewForecastRuleCalculationCoordinator(
 		forecastRulesRepository: forecastRulesRepository,
 		forecastingService:      forecastingService,
 		budgetTrafficProvider:   budgetTrafficProvider,
+		budgetTrafficFactory:    NewBudgetTrafficFactory(budgetTrafficProvider),
 	}
 }
 
@@ -46,12 +49,16 @@ func (c ForecastRuleCalculationCoordinator) CalculateAll() {
 
 	ruleCounter := 0
 
+	totalBudgetTrafficRecords := 0
+
 	for _, forecastRule := range forecastRules {
 		forecastRule.LHM = carbon.Parse("2024-02-01").ToDateStruct()
 
 		budgetTrafficRecords := c.forecastingService.Evaluate(forecastRule)
 
-		c.budgetTrafficProvider.CreateMany(budgetTrafficRecords)
+		totalBudgetTrafficRecords += len(budgetTrafficRecords)
+
+		c.budgetTrafficFactory.AddMany(budgetTrafficRecords)
 
 		if ruleCounter == 5000 {
 			log.Println("5000 rules calculated")
@@ -61,11 +68,15 @@ func (c ForecastRuleCalculationCoordinator) CalculateAll() {
 		ruleCounter++
 	}
 
+	c.budgetTrafficFactory.Commit()
+
 	log.Println("Forecast rules application finished")
 
 	c.budgetTrafficProvider.CountForecasted()
 
 	log.Println("Total not calculated rules: ", c.forecastingService.TotalNotCalculatedRules)
+
+	log.Println("Total created records: ", totalBudgetTrafficRecords)
 
 	log.Println("Finished")
 }

@@ -5,6 +5,7 @@ import (
 	"forecasting/app/calculation/distribution_models"
 	"forecasting/app/calculation/forecast_models"
 	"forecasting/app/domain/models"
+	"forecasting/app/providers"
 )
 
 type Service interface {
@@ -14,16 +15,30 @@ type Service interface {
 type forecastingService struct {
 	mapper BudgetTrafficRecordMapper
 
+	maProvider providers.MonthlyAggregationProvider
+
+	btrProvider providers.BudgetTrafficProvider
+
 	TotalNotCalculatedRules int
 }
 
-func NewService(mapper BudgetTrafficRecordMapper) forecastingService {
-	return forecastingService{mapper: mapper, TotalNotCalculatedRules: 0}
+func NewForecastingService(
+	btrMapper BudgetTrafficRecordMapper,
+	maProvider providers.MonthlyAggregationProvider,
+	btrProvider providers.BudgetTrafficProvider,
+) forecastingService {
+
+	return forecastingService{
+		mapper:                  btrMapper,
+		maProvider:              maProvider,
+		btrProvider:             btrProvider,
+		TotalNotCalculatedRules: 0,
+	}
 }
 
 func (s *forecastingService) Evaluate(forecastRule *models.ForecastRule) []models.BudgetTrafficRecord {
 
-	forecastModel := forecast_models.NewManualVolume()
+	forecastModel := forecast_models.NewManualVolume(s.maProvider)
 
 	forecastRecords, err := forecastModel.Calculate(forecastRule)
 
@@ -32,7 +47,7 @@ func (s *forecastingService) Evaluate(forecastRule *models.ForecastRule) []model
 		return nil
 	}
 
-	distributionModel := distribution_models.NewMovingAverage()
+	distributionModel := distribution_models.NewMovingAverage(s.btrProvider)
 
 	distributionRecords, _err := distributionModel.Apply(forecastRule, forecastRecords)
 
