@@ -28,7 +28,7 @@ func (model *manualVolume) Calculate(forecastRule *rules.ForecastRule) ([]calcul
 	trafficRecords := model.trafficProvider.GetLast(forecastRule, trafficPeriod)
 
 	if traffic.ShouldCalculateWithoutTraffic(trafficRecords) {
-		return model.calculateWithoutTraffic(forecastRule)
+		return model.calculateWithoutTraffic(forecastRule), nil
 	}
 
 	if forecastRule.Period.Contains(forecastRule.LHM) {
@@ -46,21 +46,14 @@ func (model *manualVolume) Calculate(forecastRule *rules.ForecastRule) ([]calcul
 	return forecastRecords, nil
 }
 
-func (model *manualVolume) calculateWithoutTraffic(forecastRule *rules.ForecastRule) (
-	[]calculation.ForecastRecord,
-	error,
-) {
-	validatedPeriod, err := forecastRule.GetValidatedPeriod()
-
-	if err != nil {
-		return nil, err
-	}
+func (model *manualVolume) calculateWithoutTraffic(forecastRule *rules.ForecastRule) []calculation.ForecastRecord {
+	validatedPeriod, _ := forecastRule.GetValidatedPeriod()
 
 	months := validatedPeriod.GetMonths()
 
 	totalMonths := len(months)
 
-	volumePerRecord := forecastRule.Volume / float64(len(months))
+	volumePerRecord := forecastRule.Volume / float64(totalMonths)
 
 	forecastRecords := make([]calculation.ForecastRecord, totalMonths)
 
@@ -70,7 +63,7 @@ func (model *manualVolume) calculateWithoutTraffic(forecastRule *rules.ForecastR
 		forecastRecords[idx] = record
 	}
 
-	return forecastRecords, nil
+	return forecastRecords
 }
 
 func (model *manualVolume) extractHistoricalVolumeFromForecasted(forecastRule *rules.ForecastRule) (float64, error) {
@@ -98,24 +91,26 @@ func (model *manualVolume) calculateWithTraffic(
 
 	totalForecastedVolume := forecastRule.Volume
 
-	totalForecastedMonths := forecastRule.Period.GetTotalMonths()
-
-	historicalTrafficMonthMap := make(map[string]traffic.MonthlyAggregationRecord, totalForecastedMonths)
+	historicalTrafficMonthMap := make(map[string]traffic.MonthlyAggregationRecord, len(trafficRecords))
 
 	for _, record := range trafficRecords {
 		historicalTrafficMonthMap[record.Month.ToDateString()] = record
 	}
 
+	forecastPeriod, _ := forecastRule.GetValidatedPeriod()
+
+	totalForecastedMonths := forecastPeriod.GetTotalMonths()
+
 	forecastRecords := make([]calculation.ForecastRecord, totalForecastedMonths)
 
-	for idx, forecastedMonth := range forecastRule.Period.GetMonths() {
-		historicalRecord := historicalTrafficMonthMap[forecastedMonth.SubYear().ToDateString()]
+	for idx, forecastMonth := range forecastPeriod.GetMonths() {
+		historicalRecord := historicalTrafficMonthMap[forecastMonth.SubYear().ToDateString()]
 
 		forecastedVolumeActual := (historicalRecord.VolumeActual / totalHistoricalVolume) * totalForecastedVolume
 
 		forecastRecord := calculation.ForecastRecord{
 			VolumeActual: forecastedVolumeActual,
-			Month:        forecastedMonth,
+			Month:        forecastMonth,
 		}
 
 		forecastRecords[idx] = forecastRecord

@@ -44,7 +44,7 @@ func (p *postgresMAProvider) Get(
 	var monthStr string
 	var volume float64
 
-	aggregations := make([]traffic.MonthlyAggregationRecord, 0)
+	var aggregations []traffic.MonthlyAggregationRecord
 
 	for rows.Next() {
 		_err := rows.Scan(&monthStr, &volume)
@@ -101,8 +101,8 @@ func (p *postgresMAProvider) GetLast(
 
 	var lastRecords []traffic.MonthlyAggregationRecord
 
-	for budgetStartDate.Compare("<", searchPeriod.StartDate.Carbon) {
-		lastRecords = make([]traffic.MonthlyAggregationRecord, 0)
+	for budgetStartDate.Compare("<=", searchPeriod.StartDate.Carbon) {
+		lastRecords = []traffic.MonthlyAggregationRecord{}
 
 		for _, r := range aggregations {
 			if searchPeriod.Contains(r.Month) {

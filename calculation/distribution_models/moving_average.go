@@ -123,8 +123,6 @@ func (ma *movingAverage) calculateWithTraffic(
 	historicalTrafficDF = historicalTrafficDF.GroupBy(
 		"HomeOperatorID",
 		"PartnerOperatorID",
-		"TrafficDirection",
-		"ServiceType",
 		"CallDestination",
 		"CalledCountryID",
 		"IsPremium",
@@ -151,13 +149,13 @@ func (ma *movingAverage) calculateWithTraffic(
 	)
 
 	// Duplicate records for every forecasted month
-	forecastDfMap := make(map[calculation.ForecastRecord]dataframe.DataFrame)
+	forecastDfMap := make(map[calculation.ForecastRecord]dataframe.DataFrame, len(forecastRecords))
 
 	for _, forecastRecord := range forecastRecords {
 		forecastDfMap[forecastRecord] = historicalTrafficDF.Copy()
 	}
 
-	distributionRecords := make([]calculation.DistributionRecord, 0)
+	var distributionRecords []calculation.DistributionRecord
 
 	for forecastRecord, df := range forecastDfMap {
 
