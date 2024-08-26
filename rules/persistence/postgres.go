@@ -129,7 +129,8 @@ SELECT
     budget_id
 FROM 
     forecast_rules
-WHERE budget_id = $1`
+WHERE budget_id = $1
+ORDER BY start_date`
 
 func mapInt64Array(arr []sql.NullInt64) []int64 {
 	var values []int64
