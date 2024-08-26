@@ -1,13 +1,13 @@
 package distribution_models
 
 import (
-	"forecasting/calculation"
-	"forecasting/rules"
+	"forecasting/app/calculation"
+	"forecasting/app/domain/models"
 )
 
 type DistributionModel interface {
 	Apply(
-		forecastRule *rules.ForecastRule,
+		forecastRule *models.ForecastRule,
 		forecastRecords []calculation.ForecastRecord,
 	) ([]calculation.DistributionRecord, error)
 }

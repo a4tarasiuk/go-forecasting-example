@@ -1,13 +1,11 @@
-package persistence
+package providers
 
 import (
 	"database/sql"
 	"log"
 
+	"forecasting/app/domain/models"
 	"forecasting/core/types"
-	"forecasting/postgres"
-	"forecasting/rules"
-	"forecasting/traffic"
 	"github.com/golang-module/carbon/v2"
 	"github.com/lib/pq"
 )
@@ -16,14 +14,14 @@ type postgresMAProvider struct {
 	db *sql.DB
 }
 
-func NewPostgresMAProvider() *postgresMAProvider {
-	return &postgresMAProvider{db: postgres.DB}
+func NewPostgresMAProvider(db *sql.DB) *postgresMAProvider {
+	return &postgresMAProvider{db: db}
 }
 
 func (p *postgresMAProvider) Get(
-	forecastRule *rules.ForecastRule,
+	forecastRule *models.ForecastRule,
 	period types.Period,
-) []traffic.MonthlyAggregationRecord {
+) []models.MonthlyAggregationRecord {
 
 	rows, err := p.db.Query(
 		getManyAggSQLQuery,
@@ -44,7 +42,7 @@ func (p *postgresMAProvider) Get(
 	var monthStr string
 	var volume float64
 
-	var aggregations []traffic.MonthlyAggregationRecord
+	var aggregations []models.MonthlyAggregationRecord
 
 	for rows.Next() {
 		_err := rows.Scan(&monthStr, &volume)
@@ -53,7 +51,7 @@ func (p *postgresMAProvider) Get(
 			log.Println(_err)
 		}
 
-		agg := traffic.MonthlyAggregationRecord{
+		agg := models.MonthlyAggregationRecord{
 			VolumeActual: volume,
 			Month:        carbon.Parse(monthStr).ToDateStruct(),
 		}
@@ -65,9 +63,9 @@ func (p *postgresMAProvider) Get(
 }
 
 func (p *postgresMAProvider) GetLast(
-	forecastRule *rules.ForecastRule,
+	forecastRule *models.ForecastRule,
 	period types.Period,
-) []traffic.MonthlyAggregationRecord {
+) []models.MonthlyAggregationRecord {
 	rows, err := p.db.Query("SELECT start_date FROM budgets WHERE id = $1", forecastRule.BudgetID)
 	defer rows.Close()
 
@@ -99,10 +97,10 @@ func (p *postgresMAProvider) GetLast(
 		searchPeriod.StartDate = budgetStartDate
 	}
 
-	var lastRecords []traffic.MonthlyAggregationRecord
+	var lastRecords []models.MonthlyAggregationRecord
 
 	for budgetStartDate.Compare("<=", searchPeriod.StartDate.Carbon) {
-		lastRecords = []traffic.MonthlyAggregationRecord{}
+		lastRecords = []models.MonthlyAggregationRecord{}
 
 		for _, r := range aggregations {
 			if searchPeriod.Contains(r.Month) {

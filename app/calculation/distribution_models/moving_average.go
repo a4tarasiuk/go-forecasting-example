@@ -1,26 +1,25 @@
 package distribution_models
 
 import (
-	"forecasting/calculation"
+	"forecasting/app/calculation"
+	"forecasting/app/domain/models"
+	"forecasting/app/providers"
 	"forecasting/core"
 	"forecasting/core/types"
-	"forecasting/rules"
-	"forecasting/traffic"
-	"forecasting/traffic/persistence"
 	"github.com/go-gota/gota/dataframe"
 	"github.com/go-gota/gota/series"
 )
 
 type movingAverage struct {
-	budgetTrafficProvider traffic.BudgetTrafficProvider
+	budgetTrafficProvider providers.BudgetTrafficProvider
 }
 
-func NewMovingAverage() movingAverage {
-	return movingAverage{budgetTrafficProvider: persistence.NewPostgresBudgetTrafficProvider()}
+func NewMovingAverage(provider providers.BudgetTrafficProvider) movingAverage {
+	return movingAverage{budgetTrafficProvider: provider}
 }
 
 func (ma *movingAverage) Apply(
-	forecastRule *rules.ForecastRule,
+	forecastRule *models.ForecastRule,
 	forecastRecords []calculation.ForecastRecord,
 ) (
 	[]calculation.DistributionRecord,
@@ -28,14 +27,14 @@ func (ma *movingAverage) Apply(
 ) {
 	historicalTrafficRecords := ma.loadHistoricalTraffic(forecastRule)
 
-	if traffic.ShouldCalculateWithoutTraffic(historicalTrafficRecords) {
+	if calculation.ShouldCalculateWithoutTraffic(historicalTrafficRecords) {
 		return ma.calculateWithoutTraffic(forecastRule, forecastRecords), nil
 	}
 
 	return ma.calculateWithTraffic(forecastRecords, historicalTrafficRecords), nil
 }
 
-func (ma *movingAverage) loadHistoricalTraffic(forecastRule *rules.ForecastRule) []traffic.BudgetTrafficRecord {
+func (ma *movingAverage) loadHistoricalTraffic(forecastRule *models.ForecastRule) []models.BudgetTrafficRecord {
 	nMonthPeriodEndDate := forecastRule.LHM
 
 	monthsToSub := *forecastRule.DistributionModelMovingAverageMonths - 1
@@ -44,7 +43,7 @@ func (ma *movingAverage) loadHistoricalTraffic(forecastRule *rules.ForecastRule)
 
 	nMonthPeriod := types.NewPeriod(nMonthPeriodStartDate, nMonthPeriodEndDate)
 
-	options := traffic.BudgetTrafficOptions{
+	options := providers.BudgetTrafficOptions{
 		ForecastRule:   forecastRule,
 		Period:         &nMonthPeriod,
 		HistoricalOnly: true,
@@ -56,7 +55,7 @@ func (ma *movingAverage) loadHistoricalTraffic(forecastRule *rules.ForecastRule)
 }
 
 func (ma *movingAverage) calculateWithoutTraffic(
-	forecastRule *rules.ForecastRule,
+	forecastRule *models.ForecastRule,
 	forecastRecords []calculation.ForecastRecord,
 ) []calculation.DistributionRecord {
 
@@ -100,7 +99,7 @@ func (ma *movingAverage) calculateWithoutTraffic(
 
 func (ma *movingAverage) calculateWithTraffic(
 	forecastRecords []calculation.ForecastRecord,
-	historicalRecords []traffic.BudgetTrafficRecord,
+	historicalRecords []models.BudgetTrafficRecord,
 ) []calculation.DistributionRecord {
 
 	rawHistoricalTrafficRecords := make([]map[string]interface{}, len(historicalRecords))
@@ -133,7 +132,7 @@ func (ma *movingAverage) calculateWithTraffic(
 	)
 
 	// Coefficient calculation
-	totalHistoricalVolume := traffic.CalculateTotalHistoricalVolume(historicalRecords)
+	totalHistoricalVolume := calculation.CalculateTotalHistoricalVolume(historicalRecords)
 
 	divideOnTotal := func(el series.Element) series.Element {
 		el.Set(el.Val().(float64) / totalHistoricalVolume)

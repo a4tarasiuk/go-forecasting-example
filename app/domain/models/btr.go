@@ -1,4 +1,4 @@
-package traffic
+package models
 
 import (
 	"forecasting/core"

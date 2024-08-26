@@ -3,27 +3,29 @@ package coordination
 import (
 	"log"
 
-	"forecasting/budget_defaults"
-	"forecasting/postgres"
-	"forecasting/rules/persistence"
-	"forecasting/traffic"
-	persistence2 "forecasting/traffic/persistence"
+	"forecasting/app/domain/repositories"
+	"forecasting/app/providers"
 	"github.com/golang-module/carbon/v2"
 )
 
 type ForecastRuleCalculationCoordinator struct {
-	forecastRulesRepository persistence.ForecastRuleRepository
+	forecastRulesRepository repositories.ForecastRuleRepository
 
 	forecastingService forecastingService
 
-	budgetTrafficProvider traffic.BudgetTrafficProvider
+	budgetTrafficProvider providers.BudgetTrafficProvider
 }
 
-func NewForecastRuleCalculationCoordinator() ForecastRuleCalculationCoordinator {
+func NewForecastRuleCalculationCoordinator(
+	forecastRulesRepository repositories.ForecastRuleRepository,
+	forecastingService forecastingService,
+	budgetTrafficProvider providers.BudgetTrafficProvider,
+) ForecastRuleCalculationCoordinator {
+
 	return ForecastRuleCalculationCoordinator{
-		forecastRulesRepository: persistence.NewPostgresForecastRuleRepository(),
-		forecastingService:      NewService(NewBudgetTrafficRecordMapper(postgres.DB, budget_defaults.BudgetID)),
-		budgetTrafficProvider:   persistence2.NewPostgresBudgetTrafficProvider(),
+		forecastRulesRepository: forecastRulesRepository,
+		forecastingService:      forecastingService,
+		budgetTrafficProvider:   budgetTrafficProvider,
 	}
 }
 

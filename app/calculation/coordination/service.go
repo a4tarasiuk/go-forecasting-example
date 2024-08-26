@@ -1,15 +1,14 @@
 package coordination
 
 import (
-	"forecasting/calculation"
-	"forecasting/calculation/distribution_models"
-	"forecasting/calculation/forecast_models"
-	"forecasting/rules"
-	"forecasting/traffic"
+	"forecasting/app/calculation"
+	"forecasting/app/calculation/distribution_models"
+	"forecasting/app/calculation/forecast_models"
+	"forecasting/app/domain/models"
 )
 
 type Service interface {
-	Evaluate(forecastRule *rules.ForecastRule) []calculation.DistributionRecord
+	Evaluate(forecastRule *models.ForecastRule) []calculation.DistributionRecord
 }
 
 type forecastingService struct {
@@ -22,7 +21,7 @@ func NewService(mapper BudgetTrafficRecordMapper) forecastingService {
 	return forecastingService{mapper: mapper, TotalNotCalculatedRules: 0}
 }
 
-func (s *forecastingService) Evaluate(forecastRule *rules.ForecastRule) []traffic.BudgetTrafficRecord {
+func (s *forecastingService) Evaluate(forecastRule *models.ForecastRule) []models.BudgetTrafficRecord {
 
 	forecastModel := forecast_models.NewManualVolume()
 
@@ -42,7 +41,7 @@ func (s *forecastingService) Evaluate(forecastRule *rules.ForecastRule) []traffi
 		return nil
 	}
 
-	budgetTrafficRecords := make([]traffic.BudgetTrafficRecord, len(distributionRecords))
+	budgetTrafficRecords := make([]models.BudgetTrafficRecord, len(distributionRecords))
 
 	for idx, _distributionRecord := range distributionRecords {
 		budgetTrafficRecords[idx] = s.mapper.FromDistributionToBudgetTrafficRecord(forecastRule, _distributionRecord)

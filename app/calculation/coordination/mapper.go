@@ -3,10 +3,9 @@ package coordination
 import (
 	"database/sql"
 
-	"forecasting/calculation"
+	"forecasting/app/calculation"
+	"forecasting/app/domain/models"
 	"forecasting/core"
-	"forecasting/rules"
-	"forecasting/traffic"
 )
 
 type BudgetTrafficRecordMapper struct {
@@ -25,9 +24,9 @@ func NewBudgetTrafficRecordMapper(db *sql.DB, budgetID int) BudgetTrafficRecordM
 }
 
 func (m BudgetTrafficRecordMapper) FromDistributionToBudgetTrafficRecord(
-	forecastRule *rules.ForecastRule,
+	forecastRule *models.ForecastRule,
 	record calculation.DistributionRecord,
-) traffic.BudgetTrafficRecord {
+) models.BudgetTrafficRecord {
 
 	cd := core.GetDefaultCDByServiceType(forecastRule.ServiceType)
 
@@ -37,7 +36,7 @@ func (m BudgetTrafficRecordMapper) FromDistributionToBudgetTrafficRecord(
 		cdVal = int64(*cd)
 	}
 
-	return traffic.BudgetTrafficRecord{
+	return models.BudgetTrafficRecord{
 		BudgetSnapshotID:  m.budgetSnapshotID,
 		HomeOperatorID:    record.HomeOperatorID,
 		PartnerOperatorID: record.PartnerOperatorID,

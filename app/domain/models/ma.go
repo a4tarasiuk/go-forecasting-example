@@ -1,4 +1,4 @@
-package traffic
+package models
 
 import "github.com/golang-module/carbon/v2"
 

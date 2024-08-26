@@ -1,30 +1,26 @@
-package persistence
+package repositories
 
 import (
 	"database/sql"
 	"log"
 
-	"forecasting/budget_defaults"
+	"forecasting/app/budget_defaults"
+	"forecasting/app/domain/models"
 	"forecasting/core"
 	"forecasting/core/types"
-	"forecasting/postgres"
 	"github.com/golang-module/carbon/v2"
 	"github.com/lib/pq"
-
-	"forecasting/rules"
 )
 
 type postgresForecastRuleRepository struct {
 	db *sql.DB
 }
 
-func NewPostgresForecastRuleRepository() *postgresForecastRuleRepository {
-	db := postgres.CreateDBConnection()
-
+func NewPostgresForecastRuleRepository(db *sql.DB) *postgresForecastRuleRepository {
 	return &postgresForecastRuleRepository{db: db}
 }
 
-func (r *postgresForecastRuleRepository) GetMany() []*rules.ForecastRule {
+func (r *postgresForecastRuleRepository) GetMany() []*models.ForecastRule {
 	rows, err := r.db.Query(getManySQLQuery, budget_defaults.BudgetID)
 	defer rows.Close()
 
@@ -41,7 +37,7 @@ func (r *postgresForecastRuleRepository) GetMany() []*rules.ForecastRule {
 	var distributionModel int
 	var distributionMovingAverageMonths *int
 
-	var forecastRules []*rules.ForecastRule
+	var forecastRules []*models.ForecastRule
 
 	for rows.Next() {
 		_err := rows.Scan(
@@ -63,7 +59,7 @@ func (r *postgresForecastRuleRepository) GetMany() []*rules.ForecastRule {
 			log.Println(_err)
 		}
 
-		rule := rules.ForecastRule{
+		rule := models.ForecastRule{
 			ID:               ID,
 			BudgetID:         budgetID,
 			HomeOperators:    mapInt64Array(sqlHomeOperators),

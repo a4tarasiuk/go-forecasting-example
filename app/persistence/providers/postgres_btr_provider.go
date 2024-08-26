@@ -1,4 +1,4 @@
-package persistence
+package providers
 
 import (
 	"database/sql"
@@ -6,10 +6,10 @@ import (
 	"log"
 	"strconv"
 
-	"forecasting/budget_defaults"
+	"forecasting/app/budget_defaults"
+	"forecasting/app/domain/models"
+	"forecasting/app/providers"
 	"forecasting/core"
-	"forecasting/postgres"
-	"forecasting/traffic"
 	"github.com/golang-module/carbon/v2"
 	"github.com/lib/pq"
 )
@@ -18,11 +18,11 @@ type postgresBudgetTrafficProvider struct {
 	db *sql.DB
 }
 
-func NewPostgresBudgetTrafficProvider() *postgresBudgetTrafficProvider {
-	return &postgresBudgetTrafficProvider{db: postgres.DB}
+func NewPostgresBudgetTrafficProvider(db *sql.DB) *postgresBudgetTrafficProvider {
+	return &postgresBudgetTrafficProvider{db: db}
 }
 
-func (p *postgresBudgetTrafficProvider) Get(options traffic.BudgetTrafficOptions) []traffic.BudgetTrafficRecord {
+func (p *postgresBudgetTrafficProvider) Get(options providers.BudgetTrafficOptions) []models.BudgetTrafficRecord {
 
 	// BudgetTrafficOptions.HistoricalOnly is enabled by default. It is hardcoded in SQL query
 
@@ -50,7 +50,7 @@ func (p *postgresBudgetTrafficProvider) Get(options traffic.BudgetTrafficOptions
 	var isPremium sql.NullBool
 	var volume float64
 
-	var budgetTrafficRecords []traffic.BudgetTrafficRecord
+	var budgetTrafficRecords []models.BudgetTrafficRecord
 
 	for rows.Next() {
 		_err := rows.Scan(
@@ -98,7 +98,7 @@ func (p *postgresBudgetTrafficProvider) Get(options traffic.BudgetTrafficOptions
 			trafficSegmentIDValue = &trafficSegmentID.Int64
 		}
 
-		record := traffic.BudgetTrafficRecord{
+		record := models.BudgetTrafficRecord{
 			BudgetSnapshotID:  budgetSnapshotID,
 			HomeOperatorID:    homeOperatorID,
 			PartnerOperatorID: partnerOperatorID,
@@ -120,7 +120,7 @@ func (p *postgresBudgetTrafficProvider) Get(options traffic.BudgetTrafficOptions
 	return budgetTrafficRecords
 }
 
-func (p *postgresBudgetTrafficProvider) CreateMany(records []traffic.BudgetTrafficRecord) {
+func (p *postgresBudgetTrafficProvider) CreateMany(records []models.BudgetTrafficRecord) {
 	defer recover()
 
 	insertManySQLQuery := `
