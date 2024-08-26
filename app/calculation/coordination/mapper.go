@@ -2,6 +2,7 @@ package coordination
 
 import (
 	"database/sql"
+	"fmt"
 
 	"forecasting/app/calculation"
 	"forecasting/app/domain/models"
@@ -16,7 +17,12 @@ func NewBudgetTrafficRecordMapper(db *sql.DB, budgetID int) BudgetTrafficRecordM
 	var budgetSnapshotID int64
 
 	// 2 - CALCULATION snapshot
-	rows, _ := db.Query("SELECT id FROM budget_snapshots WHERE budget_id = $1 AND type = 2", budgetID)
+	rows, err := db.Query("SELECT id FROM budget_snapshots WHERE budget_id = $1 AND type = 2", budgetID)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	rows.Next()
 	rows.Scan(&budgetSnapshotID)
 

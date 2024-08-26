@@ -2,7 +2,7 @@ package forecast_models
 
 import (
 	"forecasting/app/calculation"
-	"forecasting/rules/models"
+	"forecasting/app/domain/models"
 )
 
 type ForecastModel interface {
