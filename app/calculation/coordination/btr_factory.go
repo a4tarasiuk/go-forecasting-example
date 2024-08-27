@@ -22,12 +22,14 @@ func (f *BudgetTrafficFactory) AddMany(records []models.BudgetTrafficRecord) {
 		return
 	}
 
-	lastRecordBeforeInsert, firstCommitingRecord := f.records[len(f.records)-1], records[0]
+	if len(f.records) > 0 {
+		lastRecordBeforeInsert, firstCommitingRecord := f.records[len(f.records)-1], records[0]
 
-	recordsFromDifferentYears := lastRecordBeforeInsert.Month.Year() != firstCommitingRecord.Month.Year()
+		recordsFromDifferentYears := lastRecordBeforeInsert.Month.Year() != firstCommitingRecord.Month.Year()
 
-	if len(f.records) > btrChunkSize || recordsFromDifferentYears {
-		f.Commit()
+		if len(f.records) > btrChunkSize || recordsFromDifferentYears {
+			f.Commit()
+		}
 	}
 
 	f.records = append(f.records, records...)

@@ -7,8 +7,8 @@ RUN go mod download
 
 COPY . ./
 
-RUN go build -o /go-docker
+RUN go build -C cmd/ -o /go-forecasting
 
 EXPOSE 8080
 
-CMD [ "/go-docker" ]
+CMD [ "/go-forecasting" ]
