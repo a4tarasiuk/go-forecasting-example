@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 
-	"forecasting/app/budget_defaults"
 	"forecasting/app/calculation"
 	"forecasting/app/persistence/providers"
 	"forecasting/app/persistence/repositories"
@@ -18,21 +17,21 @@ func main() {
 		log.Fatal("Error loading .env file", err)
 	}
 
-	_infra, _ := infra.NewInfra(cfg)
+	var _infra *infra.Infra
+
+	_infra, err = infra.NewInfra(cfg)
+
+	if err != nil {
+		log.Println("Error creating infra", err)
+	}
 
 	defer _infra.Shutdown()
-
-	btrMapper := calculation.NewBudgetTrafficRecordMapper(_infra.GetDB(), budget_defaults.BudgetID)
 
 	maProvider := providers.NewPostgresMAProvider(_infra.GetDB())
 
 	btrProvider := providers.NewPostgresBudgetTrafficProvider(_infra.GetDB())
 
-	forecastingService := calculation.NewForecastingService(
-		btrMapper,
-		maProvider,
-		btrProvider,
-	)
+	forecastingService := calculation.NewForecastingService(maProvider, btrProvider)
 
 	forecastRuleRepo := repositories.NewPostgresForecastRuleRepository(_infra.GetDB())
 

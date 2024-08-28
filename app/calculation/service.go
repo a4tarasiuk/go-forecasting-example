@@ -2,48 +2,38 @@ package calculation
 
 import (
 	"forecasting/app/calculation/distribution_models"
-	"forecasting/app/calculation/dto"
 	"forecasting/app/calculation/forecast_models"
 	"forecasting/app/domain/models"
 	"forecasting/app/providers"
 )
 
-type Service interface {
-	Evaluate(forecastRule *models.ForecastRule) []dto.DistributionRecord
-}
-
-type forecastingService struct {
+type ForecastingService struct {
 	mapper BudgetTrafficRecordMapper
 
 	maProvider providers.MonthlyAggregationProvider
 
 	btrProvider providers.BudgetTrafficProvider
-
-	TotalNotCalculatedRules int
 }
 
 func NewForecastingService(
-	btrMapper BudgetTrafficRecordMapper,
 	maProvider providers.MonthlyAggregationProvider,
 	btrProvider providers.BudgetTrafficProvider,
-) forecastingService {
+) ForecastingService {
 
-	return forecastingService{
-		mapper:                  btrMapper,
-		maProvider:              maProvider,
-		btrProvider:             btrProvider,
-		TotalNotCalculatedRules: 0,
+	return ForecastingService{
+		mapper:      NewBudgetTrafficRecordMapper(),
+		maProvider:  maProvider,
+		btrProvider: btrProvider,
 	}
 }
 
-func (s *forecastingService) Evaluate(forecastRule *models.ForecastRule) []models.BudgetTrafficRecord {
+func (s *ForecastingService) Evaluate(forecastRule *models.ForecastRule) []models.BudgetTrafficRecord {
 
 	forecastModel := forecast_models.NewManualVolume(s.maProvider)
 
 	forecastRecords, err := forecastModel.Calculate(forecastRule)
 
 	if err != nil {
-		s.TotalNotCalculatedRules++
 		return nil
 	}
 
@@ -52,7 +42,6 @@ func (s *forecastingService) Evaluate(forecastRule *models.ForecastRule) []model
 	distributionRecords, _err := distributionModel.Apply(forecastRule, forecastRecords)
 
 	if _err != nil {
-		s.TotalNotCalculatedRules++
 		return nil
 	}
 

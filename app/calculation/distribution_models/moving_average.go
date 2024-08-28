@@ -11,15 +11,15 @@ import (
 	"github.com/go-gota/gota/series"
 )
 
-type movingAverage struct {
+type MovingAverage struct {
 	budgetTrafficProvider providers.BudgetTrafficProvider
 }
 
-func NewMovingAverage(provider providers.BudgetTrafficProvider) movingAverage {
-	return movingAverage{budgetTrafficProvider: provider}
+func NewMovingAverage(provider providers.BudgetTrafficProvider) MovingAverage {
+	return MovingAverage{budgetTrafficProvider: provider}
 }
 
-func (ma *movingAverage) Apply(
+func (ma *MovingAverage) Apply(
 	forecastRule *models.ForecastRule,
 	forecastRecords []dto.ForecastRecord,
 ) (
@@ -35,7 +35,7 @@ func (ma *movingAverage) Apply(
 	return ma.calculateWithTraffic(forecastRecords, historicalTrafficRecords), nil
 }
 
-func (ma *movingAverage) loadHistoricalTraffic(forecastRule *models.ForecastRule) []models.BudgetTrafficRecord {
+func (ma *MovingAverage) loadHistoricalTraffic(forecastRule *models.ForecastRule) []models.BudgetTrafficRecord {
 	nMonthPeriodEndDate := forecastRule.LHM
 
 	monthsToSub := *forecastRule.DistributionModelMovingAverageMonths - 1
@@ -55,7 +55,7 @@ func (ma *movingAverage) loadHistoricalTraffic(forecastRule *models.ForecastRule
 	return budgetTrafficRecords
 }
 
-func (ma *movingAverage) calculateWithoutTraffic(
+func (ma *MovingAverage) calculateWithoutTraffic(
 	forecastRule *models.ForecastRule,
 	forecastRecords []dto.ForecastRecord,
 ) []dto.DistributionRecord {
@@ -77,6 +77,7 @@ func (ma *movingAverage) calculateWithoutTraffic(
 			for _, partnerOperatorID := range forecastRule.PartnerOperators {
 
 				_distributionRecord := dto.DistributionRecord{
+					BudgetSnapshotID:  forecastRule.BudgetSnapshotID,
 					HomeOperatorID:    homeOperatorID,
 					PartnerOperatorID: partnerOperatorID,
 					Month:             forecastRecord.Month,
@@ -98,7 +99,7 @@ func (ma *movingAverage) calculateWithoutTraffic(
 	return distributionRecords
 }
 
-func (ma *movingAverage) calculateWithTraffic(
+func (ma *MovingAverage) calculateWithTraffic(
 	forecastRecords []dto.ForecastRecord,
 	historicalRecords []models.BudgetTrafficRecord,
 ) []dto.DistributionRecord {

@@ -11,7 +11,8 @@ import (
 type ForecastRule struct {
 	ID int64
 
-	BudgetID int64
+	BudgetID         int64
+	BudgetSnapshotID int64
 
 	HomeOperators    []int64
 	PartnerOperators []int64

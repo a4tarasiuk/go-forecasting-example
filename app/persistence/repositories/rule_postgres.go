@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	"forecasting/app/budget_defaults"
@@ -12,15 +13,17 @@ import (
 	"github.com/lib/pq"
 )
 
-type postgresForecastRuleRepository struct {
+type PostgresForecastRuleRepository struct {
 	db *sql.DB
 }
 
-func NewPostgresForecastRuleRepository(db *sql.DB) *postgresForecastRuleRepository {
-	return &postgresForecastRuleRepository{db: db}
+func NewPostgresForecastRuleRepository(db *sql.DB) *PostgresForecastRuleRepository {
+	return &PostgresForecastRuleRepository{db: db}
 }
 
-func (r *postgresForecastRuleRepository) GetMany() []*models.ForecastRule {
+func (r *PostgresForecastRuleRepository) GetMany() []*models.ForecastRule {
+	budgetSnapshotID := r.getBudgetSnapshotID(budget_defaults.BudgetID)
+
 	rows, err := r.db.Query(getManySQLQuery, budget_defaults.BudgetID)
 	defer rows.Close()
 
@@ -62,6 +65,7 @@ func (r *postgresForecastRuleRepository) GetMany() []*models.ForecastRule {
 		rule := models.ForecastRule{
 			ID:               ID,
 			BudgetID:         budgetID,
+			BudgetSnapshotID: budgetSnapshotID,
 			HomeOperators:    mapInt64Array(sqlHomeOperators),
 			PartnerOperators: mapInt64Array(sqlPartnerOperators),
 			Period: types.NewPeriod(
@@ -81,6 +85,24 @@ func (r *postgresForecastRuleRepository) GetMany() []*models.ForecastRule {
 	}
 
 	return forecastRules
+}
+
+func (r *PostgresForecastRuleRepository) getBudgetSnapshotID(budgetID int) int64 {
+	var budgetSnapshotID int64
+
+	// 2 - CALCULATION snapshot
+	rows, err := r.db.Query("SELECT id FROM budget_snapshots WHERE budget_id = $1 AND type = 2", budgetID)
+
+	defer rows.Close()
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	rows.Next()
+	rows.Scan(&budgetSnapshotID)
+
+	return budgetSnapshotID
 }
 
 const getManySQLQuery = `
