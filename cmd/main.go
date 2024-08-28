@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"forecasting/app/budget_defaults"
-	"forecasting/app/calculation/coordination"
+	"forecasting/app/calculation"
 	"forecasting/app/persistence/providers"
 	"forecasting/app/persistence/repositories"
 	"forecasting/internal/config"
@@ -22,13 +22,13 @@ func main() {
 
 	defer _infra.Shutdown()
 
-	btrMapper := coordination.NewBudgetTrafficRecordMapper(_infra.GetDB(), budget_defaults.BudgetID)
+	btrMapper := calculation.NewBudgetTrafficRecordMapper(_infra.GetDB(), budget_defaults.BudgetID)
 
 	maProvider := providers.NewPostgresMAProvider(_infra.GetDB())
 
 	btrProvider := providers.NewPostgresBudgetTrafficProvider(_infra.GetDB())
 
-	forecastingService := coordination.NewForecastingService(
+	forecastingService := calculation.NewForecastingService(
 		btrMapper,
 		maProvider,
 		btrProvider,
@@ -36,7 +36,7 @@ func main() {
 
 	forecastRuleRepo := repositories.NewPostgresForecastRuleRepository(_infra.GetDB())
 
-	calcCoordinator := coordination.NewForecastRuleCalculationCoordinator(
+	calcCoordinator := calculation.NewForecastRuleCalculationCoordinator(
 		forecastRuleRepo,
 		forecastingService,
 		btrProvider,

@@ -1,15 +1,15 @@
-package coordination
+package calculation
 
 import (
-	"forecasting/app/calculation"
 	"forecasting/app/calculation/distribution_models"
+	"forecasting/app/calculation/dto"
 	"forecasting/app/calculation/forecast_models"
 	"forecasting/app/domain/models"
 	"forecasting/app/providers"
 )
 
 type Service interface {
-	Evaluate(forecastRule *models.ForecastRule) []calculation.DistributionRecord
+	Evaluate(forecastRule *models.ForecastRule) []dto.DistributionRecord
 }
 
 type forecastingService struct {

@@ -1,7 +1,8 @@
 package distribution_models
 
 import (
-	"forecasting/app/calculation"
+	"forecasting/app/calculation/calc_utils"
+	"forecasting/app/calculation/dto"
 	"forecasting/app/domain/models"
 	"forecasting/app/providers"
 	"forecasting/core"
@@ -20,14 +21,14 @@ func NewMovingAverage(provider providers.BudgetTrafficProvider) movingAverage {
 
 func (ma *movingAverage) Apply(
 	forecastRule *models.ForecastRule,
-	forecastRecords []calculation.ForecastRecord,
+	forecastRecords []dto.ForecastRecord,
 ) (
-	[]calculation.DistributionRecord,
+	[]dto.DistributionRecord,
 	error,
 ) {
 	historicalTrafficRecords := ma.loadHistoricalTraffic(forecastRule)
 
-	if calculation.ShouldCalculateWithoutTraffic(historicalTrafficRecords) {
+	if calc_utils.ShouldCalculateWithoutTraffic(historicalTrafficRecords) {
 		return ma.calculateWithoutTraffic(forecastRule, forecastRecords), nil
 	}
 
@@ -56,8 +57,8 @@ func (ma *movingAverage) loadHistoricalTraffic(forecastRule *models.ForecastRule
 
 func (ma *movingAverage) calculateWithoutTraffic(
 	forecastRule *models.ForecastRule,
-	forecastRecords []calculation.ForecastRecord,
-) []calculation.DistributionRecord {
+	forecastRecords []dto.ForecastRecord,
+) []dto.DistributionRecord {
 
 	totalHomeOperators := int64(len(forecastRule.HomeOperators))
 	totalPartnerOperators := int64(len(forecastRule.PartnerOperators))
@@ -65,7 +66,7 @@ func (ma *movingAverage) calculateWithoutTraffic(
 
 	totalResultRecords := totalHomeOperators * totalPartnerOperators * totalMonths
 
-	distributionRecords := make([]calculation.DistributionRecord, totalResultRecords)
+	distributionRecords := make([]dto.DistributionRecord, totalResultRecords)
 
 	idx := 0
 
@@ -75,7 +76,7 @@ func (ma *movingAverage) calculateWithoutTraffic(
 		for _, homeOperatorID := range forecastRule.HomeOperators {
 			for _, partnerOperatorID := range forecastRule.PartnerOperators {
 
-				_distributionRecord := calculation.DistributionRecord{
+				_distributionRecord := dto.DistributionRecord{
 					HomeOperatorID:    homeOperatorID,
 					PartnerOperatorID: partnerOperatorID,
 					Month:             forecastRecord.Month,
@@ -98,9 +99,9 @@ func (ma *movingAverage) calculateWithoutTraffic(
 }
 
 func (ma *movingAverage) calculateWithTraffic(
-	forecastRecords []calculation.ForecastRecord,
+	forecastRecords []dto.ForecastRecord,
 	historicalRecords []models.BudgetTrafficRecord,
-) []calculation.DistributionRecord {
+) []dto.DistributionRecord {
 
 	rawHistoricalTrafficRecords := make([]map[string]interface{}, len(historicalRecords))
 
@@ -132,7 +133,7 @@ func (ma *movingAverage) calculateWithTraffic(
 	)
 
 	// Coefficient calculation
-	totalHistoricalVolume := calculation.CalculateTotalHistoricalVolume(historicalRecords)
+	totalHistoricalVolume := calc_utils.CalculateTotalHistoricalVolume(historicalRecords)
 
 	divideOnTotal := func(el series.Element) series.Element {
 		el.Set(el.Val().(float64) / totalHistoricalVolume)
@@ -148,20 +149,20 @@ func (ma *movingAverage) calculateWithTraffic(
 	)
 
 	// Duplicate records for every forecasted month
-	forecastDfMap := make(map[calculation.ForecastRecord]dataframe.DataFrame, len(forecastRecords))
+	forecastDfMap := make(map[dto.ForecastRecord]dataframe.DataFrame, len(forecastRecords))
 
 	for _, forecastRecord := range forecastRecords {
 		forecastDfMap[forecastRecord] = historicalTrafficDF.Copy()
 	}
 
-	var distributionRecords []calculation.DistributionRecord
+	var distributionRecords []dto.DistributionRecord
 
 	for forecastRecord, df := range forecastDfMap {
 
 		for _, row := range df.Maps() {
 			forecastedVolumeActual := row["ForecastCoefficient"].(float64) * forecastRecord.VolumeActual
 
-			_distributionRecord := calculation.DistributionRecord{
+			_distributionRecord := dto.DistributionRecord{
 				HomeOperatorID:    int64(row["HomeOperatorID"].(int)),
 				PartnerOperatorID: int64(row["PartnerOperatorID"].(int)),
 				Month:             forecastRecord.Month,

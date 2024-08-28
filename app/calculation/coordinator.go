@@ -1,4 +1,4 @@
-package coordination
+package calculation
 
 import (
 	"log"

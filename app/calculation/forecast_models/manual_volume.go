@@ -3,7 +3,8 @@ package forecast_models
 import (
 	"errors"
 
-	"forecasting/app/calculation"
+	"forecasting/app/calculation/calc_utils"
+	"forecasting/app/calculation/dto"
 	"forecasting/app/domain/models"
 	"forecasting/app/providers"
 	"forecasting/core/types"
@@ -17,7 +18,7 @@ func NewManualVolume(trafficProvider providers.MonthlyAggregationProvider) manua
 	return manualVolume{trafficProvider: trafficProvider}
 }
 
-func (model *manualVolume) Calculate(forecastRule *models.ForecastRule) ([]calculation.ForecastRecord, error) {
+func (model *manualVolume) Calculate(forecastRule *models.ForecastRule) ([]dto.ForecastRecord, error) {
 	trafficPeriod, err := createTrafficPeriodFromForecasted(forecastRule)
 
 	if err != nil {
@@ -26,7 +27,7 @@ func (model *manualVolume) Calculate(forecastRule *models.ForecastRule) ([]calcu
 
 	trafficRecords := model.trafficProvider.GetLast(forecastRule, trafficPeriod)
 
-	if calculation.ShouldCalculateWithoutTraffic(trafficRecords) {
+	if calc_utils.ShouldCalculateWithoutTraffic(trafficRecords) {
 		return model.calculateWithoutTraffic(forecastRule), nil
 	}
 
@@ -45,7 +46,7 @@ func (model *manualVolume) Calculate(forecastRule *models.ForecastRule) ([]calcu
 	return forecastRecords, nil
 }
 
-func (model *manualVolume) calculateWithoutTraffic(forecastRule *models.ForecastRule) []calculation.ForecastRecord {
+func (model *manualVolume) calculateWithoutTraffic(forecastRule *models.ForecastRule) []dto.ForecastRecord {
 	validatedPeriod, _ := forecastRule.GetValidatedPeriod()
 
 	months := validatedPeriod.GetMonths()
@@ -54,10 +55,10 @@ func (model *manualVolume) calculateWithoutTraffic(forecastRule *models.Forecast
 
 	volumePerRecord := forecastRule.Volume / float64(totalMonths)
 
-	forecastRecords := make([]calculation.ForecastRecord, totalMonths)
+	forecastRecords := make([]dto.ForecastRecord, totalMonths)
 
 	for idx, month := range months {
-		record := calculation.ForecastRecord{VolumeActual: volumePerRecord, Month: month}
+		record := dto.ForecastRecord{VolumeActual: volumePerRecord, Month: month}
 
 		forecastRecords[idx] = record
 	}
@@ -70,7 +71,7 @@ func (model *manualVolume) extractHistoricalVolumeFromForecasted(forecastRule *m
 
 	trafficRecords := model.trafficProvider.Get(forecastRule, historicalPeriodInForecasted)
 
-	totalHistoricalVolume := calculation.CalculateTotalHistoricalVolume(trafficRecords)
+	totalHistoricalVolume := calc_utils.CalculateTotalHistoricalVolume(trafficRecords)
 
 	if totalHistoricalVolume > forecastRule.Volume {
 		return 0, errors.New("historical volume exceeds forecasted volume")
@@ -84,9 +85,9 @@ func (model *manualVolume) extractHistoricalVolumeFromForecasted(forecastRule *m
 func (model *manualVolume) calculateWithTraffic(
 	forecastRule *models.ForecastRule,
 	trafficRecords []models.MonthlyAggregationRecord,
-) []calculation.ForecastRecord {
+) []dto.ForecastRecord {
 
-	totalHistoricalVolume := calculation.CalculateTotalHistoricalVolume(trafficRecords)
+	totalHistoricalVolume := calc_utils.CalculateTotalHistoricalVolume(trafficRecords)
 
 	totalForecastedVolume := forecastRule.Volume
 
@@ -100,14 +101,14 @@ func (model *manualVolume) calculateWithTraffic(
 
 	totalForecastedMonths := forecastPeriod.GetTotalMonths()
 
-	forecastRecords := make([]calculation.ForecastRecord, totalForecastedMonths)
+	forecastRecords := make([]dto.ForecastRecord, totalForecastedMonths)
 
 	for idx, forecastMonth := range forecastPeriod.GetMonths() {
 		historicalRecord := historicalTrafficMonthMap[forecastMonth.SubYear().ToDateString()]
 
 		forecastedVolumeActual := (historicalRecord.VolumeActual / totalHistoricalVolume) * totalForecastedVolume
 
-		forecastRecord := calculation.ForecastRecord{
+		forecastRecord := dto.ForecastRecord{
 			VolumeActual: forecastedVolumeActual,
 			Month:        forecastMonth,
 		}

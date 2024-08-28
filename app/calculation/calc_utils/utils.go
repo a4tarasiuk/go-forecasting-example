@@ -1,4 +1,4 @@
-package calculation
+package calc_utils
 
 import "forecasting/app/domain/models"
 

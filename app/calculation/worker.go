@@ -1,4 +1,4 @@
-package coordination
+package calculation
 
 import (
 	"forecasting/app/domain/models"

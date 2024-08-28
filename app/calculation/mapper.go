@@ -1,10 +1,10 @@
-package coordination
+package calculation
 
 import (
 	"database/sql"
 	"fmt"
 
-	"forecasting/app/calculation"
+	"forecasting/app/calculation/dto"
 	"forecasting/app/domain/models"
 	"forecasting/core"
 )
@@ -31,7 +31,7 @@ func NewBudgetTrafficRecordMapper(db *sql.DB, budgetID int) BudgetTrafficRecordM
 
 func (m BudgetTrafficRecordMapper) FromDistributionToBudgetTrafficRecord(
 	forecastRule *models.ForecastRule,
-	record calculation.DistributionRecord,
+	record dto.DistributionRecord,
 ) models.BudgetTrafficRecord {
 
 	cd := core.GetDefaultCDByServiceType(forecastRule.ServiceType)

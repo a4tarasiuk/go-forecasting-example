@@ -1,4 +1,4 @@
-package calculation
+package dto
 
 import "github.com/golang-module/carbon/v2"
 
