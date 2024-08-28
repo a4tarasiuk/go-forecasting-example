@@ -3,6 +3,8 @@ package dto
 import "github.com/golang-module/carbon/v2"
 
 type DistributionRecord struct {
+	BudgetSnapshotID int64
+
 	HomeOperatorID    int64
 	PartnerOperatorID int64
 

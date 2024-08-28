@@ -1,32 +1,16 @@
 package calculation
 
 import (
-	"database/sql"
-	"fmt"
-
 	"forecasting/app/calculation/dto"
 	"forecasting/app/domain/models"
 	"forecasting/core"
 )
 
 type BudgetTrafficRecordMapper struct {
-	budgetSnapshotID int64
 }
 
-func NewBudgetTrafficRecordMapper(db *sql.DB, budgetID int) BudgetTrafficRecordMapper {
-	var budgetSnapshotID int64
-
-	// 2 - CALCULATION snapshot
-	rows, err := db.Query("SELECT id FROM budget_snapshots WHERE budget_id = $1 AND type = 2", budgetID)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	rows.Next()
-	rows.Scan(&budgetSnapshotID)
-
-	return BudgetTrafficRecordMapper{budgetSnapshotID: budgetSnapshotID}
+func NewBudgetTrafficRecordMapper() BudgetTrafficRecordMapper {
+	return BudgetTrafficRecordMapper{}
 }
 
 func (m BudgetTrafficRecordMapper) FromDistributionToBudgetTrafficRecord(
@@ -43,7 +27,7 @@ func (m BudgetTrafficRecordMapper) FromDistributionToBudgetTrafficRecord(
 	}
 
 	return models.BudgetTrafficRecord{
-		BudgetSnapshotID:  m.budgetSnapshotID,
+		BudgetSnapshotID:  record.BudgetSnapshotID,
 		HomeOperatorID:    record.HomeOperatorID,
 		PartnerOperatorID: record.PartnerOperatorID,
 		TrafficType:       2, // FORECASTED

@@ -77,6 +77,7 @@ func (ma *movingAverage) calculateWithoutTraffic(
 			for _, partnerOperatorID := range forecastRule.PartnerOperators {
 
 				_distributionRecord := dto.DistributionRecord{
+					BudgetSnapshotID:  forecastRule.BudgetSnapshotID,
 					HomeOperatorID:    homeOperatorID,
 					PartnerOperatorID: partnerOperatorID,
 					Month:             forecastRecord.Month,

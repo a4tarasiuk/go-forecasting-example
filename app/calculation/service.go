@@ -18,21 +18,17 @@ type forecastingService struct {
 	maProvider providers.MonthlyAggregationProvider
 
 	btrProvider providers.BudgetTrafficProvider
-
-	TotalNotCalculatedRules int
 }
 
 func NewForecastingService(
-	btrMapper BudgetTrafficRecordMapper,
 	maProvider providers.MonthlyAggregationProvider,
 	btrProvider providers.BudgetTrafficProvider,
 ) forecastingService {
 
 	return forecastingService{
-		mapper:                  btrMapper,
-		maProvider:              maProvider,
-		btrProvider:             btrProvider,
-		TotalNotCalculatedRules: 0,
+		mapper:      NewBudgetTrafficRecordMapper(),
+		maProvider:  maProvider,
+		btrProvider: btrProvider,
 	}
 }
 
@@ -43,7 +39,6 @@ func (s *forecastingService) Evaluate(forecastRule *models.ForecastRule) []model
 	forecastRecords, err := forecastModel.Calculate(forecastRule)
 
 	if err != nil {
-		s.TotalNotCalculatedRules++
 		return nil
 	}
 
@@ -52,7 +47,6 @@ func (s *forecastingService) Evaluate(forecastRule *models.ForecastRule) []model
 	distributionRecords, _err := distributionModel.Apply(forecastRule, forecastRecords)
 
 	if _err != nil {
-		s.TotalNotCalculatedRules++
 		return nil
 	}
 
