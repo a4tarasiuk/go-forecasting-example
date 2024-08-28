@@ -13,15 +13,15 @@ import (
 	"github.com/lib/pq"
 )
 
-type postgresBudgetTrafficProvider struct {
+type PostgresBudgetTrafficProvider struct {
 	db *sql.DB
 }
 
-func NewPostgresBudgetTrafficProvider(db *sql.DB) *postgresBudgetTrafficProvider {
-	return &postgresBudgetTrafficProvider{db: db}
+func NewPostgresBudgetTrafficProvider(db *sql.DB) *PostgresBudgetTrafficProvider {
+	return &PostgresBudgetTrafficProvider{db: db}
 }
 
-func (p *postgresBudgetTrafficProvider) Get(options providers.BudgetTrafficOptions) []models.BudgetTrafficRecord {
+func (p *PostgresBudgetTrafficProvider) Get(options providers.BudgetTrafficOptions) []models.BudgetTrafficRecord {
 
 	// BudgetTrafficOptions.HistoricalOnly is enabled by default. It is hardcoded in SQL query
 
@@ -119,7 +119,7 @@ func (p *postgresBudgetTrafficProvider) Get(options providers.BudgetTrafficOptio
 	return budgetTrafficRecords
 }
 
-func (p *postgresBudgetTrafficProvider) CreateMany(records []models.BudgetTrafficRecord) {
+func (p *PostgresBudgetTrafficProvider) CreateMany(records []models.BudgetTrafficRecord) {
 	defer recover()
 
 	insertManySQLQuery := `
@@ -195,11 +195,11 @@ INSERT INTO
 	}
 }
 
-func (p *postgresBudgetTrafficProvider) ClearForecasted() {
+func (p *PostgresBudgetTrafficProvider) ClearForecasted() {
 	p.db.Query(deleteManySQLQuery, budget_defaults.BudgetID)
 }
 
-func (p *postgresBudgetTrafficProvider) CountForecasted() {
+func (p *PostgresBudgetTrafficProvider) CountForecasted() {
 	rows, _ := p.db.Query("SELECT COUNT(id) FROM budget_traffic_records WHERE budget_snapshot_id = 498 AND traffic_type = 2")
 
 	defer rows.Close()

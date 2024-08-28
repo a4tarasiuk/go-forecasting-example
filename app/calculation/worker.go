@@ -5,7 +5,7 @@ import (
 )
 
 func ForecastWorker(
-	service forecastingService,
+	service ForecastingService,
 	forecastRules <-chan *models.ForecastRule,
 	budgetTrafficRecords chan<- []models.BudgetTrafficRecord,
 ) {

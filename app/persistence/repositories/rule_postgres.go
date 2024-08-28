@@ -13,15 +13,15 @@ import (
 	"github.com/lib/pq"
 )
 
-type postgresForecastRuleRepository struct {
+type PostgresForecastRuleRepository struct {
 	db *sql.DB
 }
 
-func NewPostgresForecastRuleRepository(db *sql.DB) *postgresForecastRuleRepository {
-	return &postgresForecastRuleRepository{db: db}
+func NewPostgresForecastRuleRepository(db *sql.DB) *PostgresForecastRuleRepository {
+	return &PostgresForecastRuleRepository{db: db}
 }
 
-func (r *postgresForecastRuleRepository) GetMany() []*models.ForecastRule {
+func (r *PostgresForecastRuleRepository) GetMany() []*models.ForecastRule {
 	budgetSnapshotID := r.getBudgetSnapshotID(budget_defaults.BudgetID)
 
 	rows, err := r.db.Query(getManySQLQuery, budget_defaults.BudgetID)
@@ -87,7 +87,7 @@ func (r *postgresForecastRuleRepository) GetMany() []*models.ForecastRule {
 	return forecastRules
 }
 
-func (r *postgresForecastRuleRepository) getBudgetSnapshotID(budgetID int) int64 {
+func (r *PostgresForecastRuleRepository) getBudgetSnapshotID(budgetID int) int64 {
 	var budgetSnapshotID int64
 
 	// 2 - CALCULATION snapshot

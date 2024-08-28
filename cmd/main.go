@@ -17,7 +17,13 @@ func main() {
 		log.Fatal("Error loading .env file", err)
 	}
 
-	_infra, _ := infra.NewInfra(cfg)
+	var _infra *infra.Infra
+
+	_infra, err = infra.NewInfra(cfg)
+
+	if err != nil {
+		log.Println("Error creating infra", err)
+	}
 
 	defer _infra.Shutdown()
 

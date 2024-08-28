@@ -11,7 +11,7 @@ import (
 type ForecastRuleCalculationCoordinator struct {
 	forecastRulesRepository repositories.ForecastRuleRepository
 
-	forecastingService forecastingService
+	forecastingService ForecastingService
 
 	budgetTrafficProvider providers.BudgetTrafficProvider
 
@@ -20,7 +20,7 @@ type ForecastRuleCalculationCoordinator struct {
 
 func NewForecastRuleCalculationCoordinator(
 	forecastRulesRepository repositories.ForecastRuleRepository,
-	forecastingService forecastingService,
+	forecastingService ForecastingService,
 	budgetTrafficProvider providers.BudgetTrafficProvider,
 ) ForecastRuleCalculationCoordinator {
 

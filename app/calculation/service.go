@@ -2,17 +2,12 @@ package calculation
 
 import (
 	"forecasting/app/calculation/distribution_models"
-	"forecasting/app/calculation/dto"
 	"forecasting/app/calculation/forecast_models"
 	"forecasting/app/domain/models"
 	"forecasting/app/providers"
 )
 
-type Service interface {
-	Evaluate(forecastRule *models.ForecastRule) []dto.DistributionRecord
-}
-
-type forecastingService struct {
+type ForecastingService struct {
 	mapper BudgetTrafficRecordMapper
 
 	maProvider providers.MonthlyAggregationProvider
@@ -23,16 +18,16 @@ type forecastingService struct {
 func NewForecastingService(
 	maProvider providers.MonthlyAggregationProvider,
 	btrProvider providers.BudgetTrafficProvider,
-) forecastingService {
+) ForecastingService {
 
-	return forecastingService{
+	return ForecastingService{
 		mapper:      NewBudgetTrafficRecordMapper(),
 		maProvider:  maProvider,
 		btrProvider: btrProvider,
 	}
 }
 
-func (s *forecastingService) Evaluate(forecastRule *models.ForecastRule) []models.BudgetTrafficRecord {
+func (s *ForecastingService) Evaluate(forecastRule *models.ForecastRule) []models.BudgetTrafficRecord {
 
 	forecastModel := forecast_models.NewManualVolume(s.maProvider)
 
