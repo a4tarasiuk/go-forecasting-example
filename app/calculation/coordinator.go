@@ -57,12 +57,9 @@ func (c *ForecastRuleCalculationCoordinator) CalculateAll() {
 
 	totalBudgetTrafficRecords := c.handleTraffic(btrChannel, totalForecastRules)
 
-	// logs
 	log.Println("Forecast rules application finished")
 
 	c.budgetTrafficProvider.CountForecasted()
-
-	log.Println("Total not calculated rules: ", c.forecastingService.TotalNotCalculatedRules)
 
 	log.Println("Total created records: ", totalBudgetTrafficRecords)
 
@@ -82,21 +79,13 @@ func (c *ForecastRuleCalculationCoordinator) handleTraffic(
 	totalForecastRules int,
 ) int {
 	totalBudgetTrafficRecords := 0
-	totalProcessedForecastRules := 0
 
 	for range totalForecastRules {
 		budgetTrafficRecords := <-records
 
 		c.budgetTrafficProvider.CreateMany(budgetTrafficRecords)
 
-		if totalProcessedForecastRules == 5000 {
-			log.Println("5000 rules processed")
-			totalProcessedForecastRules = 0
-		}
-
 		totalBudgetTrafficRecords += len(budgetTrafficRecords)
-
-		totalProcessedForecastRules++
 	}
 
 	return totalBudgetTrafficRecords

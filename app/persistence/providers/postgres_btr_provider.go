@@ -2,7 +2,6 @@ package providers
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"strconv"
 
@@ -209,8 +208,6 @@ func (p *postgresBudgetTrafficProvider) CountForecasted() {
 
 	rows.Next()
 	rows.Scan(&totalRecords)
-
-	fmt.Println("total created forecasted records - ", totalRecords)
 }
 
 const getManySQLQuery = `
