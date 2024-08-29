@@ -126,16 +126,10 @@ func createTrafficPeriodFromForecasted(rule *models.ForecastRule) (types.Period,
 		return types.Period{}, err
 	}
 
-	budgetTrafficPeriod := types.NewPeriod(
-		forecastPeriod.StartDate.SubYear().ToDateStruct(),
-		forecastPeriod.EndDate.SubYear().ToDateStruct(),
-	)
+	budgetTrafficPeriod := forecastPeriod.PreviousYear()
 
-	if forecastPeriod.GetTotalMonths() > 12 {
-		budgetTrafficPeriod = types.NewPeriod(
-			budgetTrafficPeriod.StartDate,
-			budgetTrafficPeriod.StartDate.AddMonths(12-1).ToDateStruct(),
-		)
+	if forecastPeriod.MoreThenAYear() {
+		budgetTrafficPeriod = budgetTrafficPeriod.CutToOneYear()
 	}
 
 	return budgetTrafficPeriod, nil
