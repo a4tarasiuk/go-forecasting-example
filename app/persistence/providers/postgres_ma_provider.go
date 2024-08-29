@@ -86,11 +86,8 @@ func (p *postgresMAProvider) GetLast(
 
 	searchPeriod := period
 
-	if searchPeriod.GetTotalMonths() > 12 {
-		searchPeriod = types.NewPeriod(
-			searchPeriod.StartDate,
-			searchPeriod.StartDate.AddMonths(12-1).ToDateStruct(),
-		)
+	if searchPeriod.MoreThenAYear() {
+		searchPeriod = searchPeriod.CutToOneYear()
 	}
 
 	if searchPeriod.StartDate.Compare("<", budgetStartDate.Carbon) {
@@ -112,11 +109,7 @@ func (p *postgresMAProvider) GetLast(
 			break
 		}
 
-		searchPeriod = types.NewPeriod(
-			searchPeriod.StartDate.SubYear().ToDateStruct(),
-			searchPeriod.EndDate.SubYear().ToDateStruct(),
-		)
-
+		searchPeriod = searchPeriod.PreviousYear()
 	}
 
 	return lastRecords

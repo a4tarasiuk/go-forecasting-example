@@ -49,3 +49,33 @@ func (p *Period) Contains(month carbon.Date) bool {
 
 	return exists
 }
+
+func (p *Period) MoreThenAYear() bool {
+	return p.GetTotalMonths() > carbon.MonthsPerYear
+}
+
+func (p *Period) CutToOneYear() Period {
+	if !p.MoreThenAYear() {
+		return *p
+	}
+
+	cutPeriod := NewPeriod(
+		p.StartDate,
+		p.StartDate.AddMonths(carbon.MonthsPerYear-1).ToDateStruct(),
+	)
+
+	return cutPeriod
+}
+
+func (p *Period) PreviousYear() Period {
+	previousYearPeriod := NewPeriod(
+		p.StartDate.SubYear().ToDateStruct(),
+		p.EndDate.SubYear().ToDateStruct(),
+	)
+
+	return previousYearPeriod
+}
+
+func ToDate(dtStr string) carbon.Date {
+	return carbon.Parse(dtStr).ToDateStruct()
+}
