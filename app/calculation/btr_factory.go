@@ -5,16 +5,25 @@ import (
 	"forecasting/app/providers"
 )
 
-const btrChunkSize = 5000
-
 type BudgetTrafficFactory struct {
 	records []models.BudgetTrafficRecord
 
 	budgetTrafficProvider providers.BudgetTrafficProvider
+
+	chunkSize int
 }
 
-func NewBudgetTrafficFactory(budgetTrafficProvider providers.BudgetTrafficProvider) *BudgetTrafficFactory {
-	return &BudgetTrafficFactory{budgetTrafficProvider: budgetTrafficProvider}
+func NewBudgetTrafficFactory(
+	budgetTrafficProvider providers.BudgetTrafficProvider,
+	chunkSize *int,
+) *BudgetTrafficFactory {
+	defaultChunkSize := 5000
+
+	if chunkSize == nil {
+		chunkSize = &defaultChunkSize
+	}
+
+	return &BudgetTrafficFactory{budgetTrafficProvider: budgetTrafficProvider, chunkSize: *chunkSize}
 }
 
 func (f *BudgetTrafficFactory) AddMany(records []models.BudgetTrafficRecord) {
@@ -22,17 +31,11 @@ func (f *BudgetTrafficFactory) AddMany(records []models.BudgetTrafficRecord) {
 		return
 	}
 
-	if len(f.records) > 0 {
-		lastRecordBeforeInsert, firstCommitingRecord := f.records[len(f.records)-1], records[0]
-
-		recordsFromDifferentYears := lastRecordBeforeInsert.Month.Year() != firstCommitingRecord.Month.Year()
-
-		if len(f.records) > btrChunkSize || recordsFromDifferentYears {
-			f.Commit()
-		}
-	}
-
 	f.records = append(f.records, records...)
+
+	if len(f.records) > f.chunkSize {
+		f.Commit()
+	}
 }
 
 func (f *BudgetTrafficFactory) Commit() {

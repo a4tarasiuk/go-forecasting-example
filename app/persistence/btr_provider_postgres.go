@@ -212,6 +212,8 @@ func (p *PostgresBudgetTrafficProvider) CountForecasted() int64 {
 	return totalRecords
 }
 
+func (p *PostgresBudgetTrafficProvider) Count() int64 { return 0 }
+
 const getManyBTRSQLQuery = `
 SELECT
     btr.budget_snapshot_id,

@@ -20,5 +20,7 @@ type (
 		ClearForecasted()
 
 		CountForecasted() int64
+
+		Count() int64
 	}
 )

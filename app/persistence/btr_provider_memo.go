@@ -44,3 +44,5 @@ func (b *BudgetTrafficInMemoryProvider) CountForecasted() int64 {
 
 	return total
 }
+
+func (b *BudgetTrafficInMemoryProvider) Count() int64 { return int64(len(b.records)) }
