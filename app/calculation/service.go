@@ -7,7 +7,11 @@ import (
 	"forecasting/app/providers"
 )
 
-type ForecastingService struct {
+type ForecastingService interface {
+	Evaluate(forecastRule *models.ForecastRule) []models.BudgetTrafficRecord
+}
+
+type ForecastingServiceImpl struct {
 	mapper BudgetTrafficRecordMapper
 
 	maProvider providers.MonthlyAggregationProvider
@@ -18,16 +22,16 @@ type ForecastingService struct {
 func NewForecastingService(
 	maProvider providers.MonthlyAggregationProvider,
 	btrProvider providers.BudgetTrafficProvider,
-) ForecastingService {
+) *ForecastingServiceImpl {
 
-	return ForecastingService{
+	return &ForecastingServiceImpl{
 		mapper:      NewBudgetTrafficRecordMapper(),
 		maProvider:  maProvider,
 		btrProvider: btrProvider,
 	}
 }
 
-func (s *ForecastingService) Evaluate(forecastRule *models.ForecastRule) []models.BudgetTrafficRecord {
+func (s *ForecastingServiceImpl) Evaluate(forecastRule *models.ForecastRule) []models.BudgetTrafficRecord {
 
 	forecastModel := forecast_models.NewManualVolume(s.maProvider)
 
