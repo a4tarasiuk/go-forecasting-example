@@ -19,6 +19,8 @@ type (
 
 		ClearForecasted()
 
-		CountForecasted()
+		CountForecasted() int64
+
+		Count() int64
 	}
 )

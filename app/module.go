@@ -10,5 +10,5 @@ type Module struct {
 }
 
 func (m *Module) Startup(context.Context, infra.Infrastructure) error {
-
+	return nil
 }

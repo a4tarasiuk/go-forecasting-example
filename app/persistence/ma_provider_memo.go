@@ -1,4 +1,4 @@
-package providers
+package persistence
 
 import (
 	"forecasting/app/domain/models"

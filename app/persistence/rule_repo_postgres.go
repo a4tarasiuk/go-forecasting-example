@@ -1,4 +1,4 @@
-package repositories
+package persistence
 
 import (
 	"database/sql"
@@ -24,7 +24,7 @@ func NewPostgresForecastRuleRepository(db *sql.DB) *PostgresForecastRuleReposito
 func (r *PostgresForecastRuleRepository) GetMany() []*models.ForecastRule {
 	budgetSnapshotID := r.getBudgetSnapshotID(budget_defaults.BudgetID)
 
-	rows, err := r.db.Query(getManySQLQuery, budget_defaults.BudgetID)
+	rows, err := r.db.Query(getManyForecastRulesSQLQuery, budget_defaults.BudgetID)
 	defer rows.Close()
 
 	if err != nil {
@@ -105,7 +105,7 @@ func (r *PostgresForecastRuleRepository) getBudgetSnapshotID(budgetID int) int64
 	return budgetSnapshotID
 }
 
-const getManySQLQuery = `
+const getManyForecastRulesSQLQuery = `
 SELECT 
     id,
     (

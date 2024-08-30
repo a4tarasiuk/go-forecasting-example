@@ -28,7 +28,7 @@ func NewForecastRuleCalculationCoordinator(
 		forecastRulesRepository: forecastRulesRepository,
 		forecastingService:      forecastingService,
 		budgetTrafficProvider:   budgetTrafficProvider,
-		budgetTrafficFactory:    NewBudgetTrafficFactory(budgetTrafficProvider),
+		budgetTrafficFactory:    NewBudgetTrafficFactory(budgetTrafficProvider, nil),
 	}
 }
 
