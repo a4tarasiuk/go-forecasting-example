@@ -1,4 +1,4 @@
-package providers
+package persistence
 
 import (
 	"database/sql"
@@ -26,7 +26,7 @@ func (p *PostgresBudgetTrafficProvider) Get(options providers.BudgetTrafficOptio
 	// BudgetTrafficOptions.HistoricalOnly is enabled by default. It is hardcoded in SQL query
 
 	rows, err := p.db.Query(
-		getManySQLQuery,
+		getManyBTRSQLQuery,
 		options.ForecastRule.BudgetID,
 		pq.Array(options.ForecastRule.HomeOperators),
 		pq.Array(options.ForecastRule.PartnerOperators),
@@ -199,7 +199,7 @@ func (p *PostgresBudgetTrafficProvider) ClearForecasted() {
 	p.db.Query(deleteManySQLQuery, budget_defaults.BudgetID)
 }
 
-func (p *PostgresBudgetTrafficProvider) CountForecasted() {
+func (p *PostgresBudgetTrafficProvider) CountForecasted() int64 {
 	rows, _ := p.db.Query("SELECT COUNT(id) FROM budget_traffic_records WHERE budget_snapshot_id = 498 AND traffic_type = 2")
 
 	defer rows.Close()
@@ -208,9 +208,11 @@ func (p *PostgresBudgetTrafficProvider) CountForecasted() {
 
 	rows.Next()
 	rows.Scan(&totalRecords)
+
+	return totalRecords
 }
 
-const getManySQLQuery = `
+const getManyBTRSQLQuery = `
 SELECT
     btr.budget_snapshot_id,
 	btr.home_operator_id,

@@ -5,7 +5,7 @@ import (
 
 	"forecasting/app/calculation/dto"
 	"forecasting/app/domain/models"
-	"forecasting/app/providers"
+	"forecasting/app/persistence"
 	"forecasting/core/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,7 +20,7 @@ func Test_when_there_is_no_historical_traffic(t *testing.T) {
 		LHM:    types.ToDate("2024-08-01"),
 	}
 
-	model := NewManualVolume(providers.NewMonthlyAggregationInMemoryProvider(nil))
+	model := NewManualVolume(persistence.NewMonthlyAggregationInMemoryProvider(nil))
 
 	forecastRecords, err := model.Calculate(forecastRule)
 
@@ -54,7 +54,7 @@ func Test_when_there_is_historical_volume_for_full_previous_year(t *testing.T) {
 		{Month: types.ToDate("2023-10-01"), VolumeActual: 464.041273},
 	}
 
-	model := NewManualVolume(providers.NewMonthlyAggregationInMemoryProvider(maRecords))
+	model := NewManualVolume(persistence.NewMonthlyAggregationInMemoryProvider(maRecords))
 
 	forecastRecords, err := model.Calculate(forecastRule)
 
@@ -94,7 +94,7 @@ func Test_when_volume_is_zero_for_previous_year(t *testing.T) {
 		{Month: types.ToDate("2023-10-01"), VolumeActual: 0.0},
 	}
 
-	model := NewManualVolume(providers.NewMonthlyAggregationInMemoryProvider(maRecords))
+	model := NewManualVolume(persistence.NewMonthlyAggregationInMemoryProvider(maRecords))
 
 	forecastRecords, err := model.Calculate(forecastRule)
 
@@ -135,7 +135,7 @@ func Test_when_no_volume_in_several_months_of_previous_year(t *testing.T) {
 		// {Month: toDate("2022-06-01"), VolumeActual: 0.0},
 	}
 
-	model := NewManualVolume(providers.NewMonthlyAggregationInMemoryProvider(maRecords))
+	model := NewManualVolume(persistence.NewMonthlyAggregationInMemoryProvider(maRecords))
 
 	forecastRecords, err := model.Calculate(forecastRule)
 
@@ -192,7 +192,7 @@ func Test_when_volume_is_zero_in_several_months_of_previous_year(t *testing.T) {
 		{Month: types.ToDate("2022-06-01"), VolumeActual: 0.0},
 	}
 
-	model := NewManualVolume(providers.NewMonthlyAggregationInMemoryProvider(maRecords))
+	model := NewManualVolume(persistence.NewMonthlyAggregationInMemoryProvider(maRecords))
 
 	forecastRecords, err := model.Calculate(forecastRule)
 
